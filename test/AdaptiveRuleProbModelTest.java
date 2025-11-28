@@ -43,14 +43,14 @@ public class AdaptiveRuleProbModelTest extends TestCase {
 		Set<NonTerminal> nonTerminals = G.getNonTerminals();
 //		System.out.println("nonTerminals = " + nonTerminals);
 		NonTerminal S = NonTerminal.of("S");
-		NonTerminal T = NonTerminal.of("T");
+		NonTerminal L = NonTerminal.of("L");
 		Assert.assertTrue(nonTerminals.contains(S));
-		Assert.assertTrue(nonTerminals.contains(T));
+		Assert.assertTrue(nonTerminals.contains(L));
 		Assert.assertTrue(G.containsRules(S));
-		Assert.assertTrue(G.containsRules(T));
+		Assert.assertTrue(G.containsRules(L));
 
 		Rule[] SRules = G.getRules(S).toArray(Rule[]::new);
-		Rule[] TRules = G.getRules(T).toArray(Rule[]::new);
+		Rule[] TRules = G.getRules(L).toArray(Rule[]::new);
 		Assert.assertEquals(2, SRules.length);
 		Assert.assertEquals(10, TRules.length);
 
