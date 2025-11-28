@@ -49,8 +49,8 @@ public class CompressionBuiltinGrammars {
         boolean withNonCanonicalRules = Boolean.parseBoolean(args[2]);
         List<SampleGrammar> listOfGrammars =
                 AllGrammars.getGrammarsFromCmdLine(args[1], withNonCanonicalRules);
-        String grammarNames = args[3];
-        RuleProbType model = RuleProbType.fromString(grammarNames);
+        String ruleProbTyp = args[3];
+        RuleProbType model = RuleProbType.fromString(ruleProbTyp);
         TrainingDataset trainingDataset = null;
         if (model == RuleProbType.STATIC || model == RuleProbType.STATIC_FROM_FILE) {
             if (args.length < 5) {
@@ -81,7 +81,7 @@ public class CompressionBuiltinGrammars {
 
         String filename = "compression-ratios-"
                 + dataset.getName()
-                + "-grammars-" + grammarNames
+                + "-grammars-" + ruleProbTyp
                 + "-withNCR-" + withNonCanonicalRules
                 + "-model-" + model
                 + (trainingDataset != null ? "-training-data-" + trainingDataset.getName() : "")
