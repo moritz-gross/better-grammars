@@ -51,7 +51,7 @@ public class PPVNSensitivityWriter {
                         + realDataset.name
                         + "-training-data-" + trainingDataset
                         + "-withNCR-" + withNonCanonicalRules
-                        + "-grammar-"+grammarName+"-predictor-" +PredictionProgram+ Compressions.DATE_TIME_FOMATTER.format(LocalDateTime.now()) + ".csv"),
+                        + "-grammar-"+grammarName+"-predictor-" +PredictionProgram+ Compressions.DATE_TIME_FORMATTER.format(LocalDateTime.now()) + ".csv"),
                 grammarHeader);
 
         for (RNAWithStructure RNAWS : realDataset) {

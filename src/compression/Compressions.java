@@ -32,7 +32,7 @@ public class Compressions {
 
 
     public static final String TIMESTAMP_PATTERN = "yyyy-MM-dd-HH-mm-ss";
-    public static final DateTimeFormatter DATE_TIME_FOMATTER
+    public static final DateTimeFormatter DATE_TIME_FORMATTER
                       = DateTimeFormatter.ofPattern(TIMESTAMP_PATTERN);
 
     /**
@@ -93,7 +93,7 @@ public class Compressions {
                 + "-withNCR-" + withNonCanonicalRules
                 + "-model-" + model
                 + (trainingDataset != null ? "-training-data-" + trainingDataset.getName() : "")
-                + "-" + DATE_TIME_FOMATTER.format(LocalDateTime.now());
+                + "-" + DATE_TIME_FORMATTER.format(LocalDateTime.now());
         CSVFile out = new CSVFile(new File(filename + ".csv"), csvHeader);
         // Print all parameters to a file
         PrintWriter paramsOut = new PrintWriter(filename + ".txt");

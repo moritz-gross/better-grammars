@@ -100,7 +100,7 @@ public class ViterbiPredictor {
 						+ dataset.name
 						+ "-training-data-" + trainingDataset.name
 						+ "-withNCR-" + withNonCanonicalRules
-						+ "-" + Compressions.DATE_TIME_FOMATTER.format(LocalDateTime.now()) + ".csv"),
+						+ "-" + Compressions.DATE_TIME_FORMATTER.format(LocalDateTime.now()) + ".csv"),
 				grammarHeader);
 
 
