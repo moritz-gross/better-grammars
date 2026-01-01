@@ -1,8 +1,9 @@
 package compression.grammargenerator.localsearch;
 
 import compression.data.Dataset;
-import compression.grammargenerator.localsearch.LocalSearchExplorer.RunResult;
-import compression.grammargenerator.localsearch.LocalSearchExplorer.RunStats;
+import compression.grammargenerator.localsearch.dataclasses.Config;
+import compression.grammargenerator.localsearch.dataclasses.RunResult;
+import compression.grammargenerator.localsearch.dataclasses.RunStats;
 
 import static java.lang.System.out;
 
@@ -55,14 +56,14 @@ public final class Logging {
 				newScore);
 	}
 
-	public static void printRunCompleted(RunStats stats) {
-		out.printf("%s completed: size=%d bits/base=%.4f steps=%d neighbors=%d%n",
-				runLabel(stats.runNumber()),
-				stats.bestSize(),
-				stats.bestBitsPerBase(),
-				stats.stepsTaken(),
-				stats.totalNeighborsEvaluated());
-	}
+public static void printRunCompleted(RunStats stats) {
+	out.printf("%s completed: size=%d bits/base=%.4f steps=%d neighbors=%d%n",
+			runLabel(stats.runNumber()),
+			stats.bestSize(),
+			stats.bestBitsPerBase(),
+			stats.stepsTaken(),
+			stats.totalNeighborsEvaluated());
+}
 
 	public static void printSummaryLine(RunStats stats) {
 		out.printf("%s | seed=%d | steps=%d | bits/base=%.4f | size=%d | neighbors=%d%n",

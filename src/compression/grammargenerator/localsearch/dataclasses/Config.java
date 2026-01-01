@@ -1,4 +1,4 @@
-package compression.grammargenerator.localsearch;
+package compression.grammargenerator.localsearch.dataclasses;
 
 /**
  * Configuration parameters for local search runs.

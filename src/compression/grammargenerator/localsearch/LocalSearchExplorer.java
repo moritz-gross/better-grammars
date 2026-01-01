@@ -11,6 +11,11 @@ import compression.grammar.SecondaryStructureGrammar;
 import compression.grammar.Terminal;
 import compression.grammargenerator.AbstractGrammarExplorer;
 import compression.grammargenerator.RandomGrammarExplorer;
+import compression.grammargenerator.localsearch.dataclasses.Config;
+import compression.grammargenerator.localsearch.dataclasses.NeighborSearchOutcome;
+import compression.grammargenerator.localsearch.dataclasses.RunResult;
+import compression.grammargenerator.localsearch.dataclasses.RunStats;
+import compression.grammargenerator.localsearch.dataclasses.SearchState;
 import compression.parser.SRFParser;
 import compression.util.MyMultimap;
 
@@ -20,11 +25,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -73,7 +78,22 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		if (objectiveLimit > 0 && objectiveLimit < rnas.size())
 			rnas = rnas.subList(0, objectiveLimit);
         List<RNAWithStructure> objectiveRnasLimited = Collections.unmodifiableList(rnas);
-		this.objectiveDatasetLimited = new ListBackedDataset(objectiveDataset.name() + "-limited", objectiveRnasLimited);
+		this.objectiveDatasetLimited = new Dataset() {
+			@Override
+			public int getSize() {
+				return objectiveRnasLimited.size();
+			}
+
+			@Override
+			public String name() {
+				return objectiveDataset.name() + "-limited";
+			}
+
+			@Override
+			public Iterator<RNAWithStructure> iterator() {
+				return objectiveRnasLimited.iterator();
+			}
+		};
 		this.objectiveDatasetWords = new ArrayList<>(objectiveRnasLimited.size());
 		for (RNAWithStructure rna : objectiveRnasLimited)
 			objectiveDatasetWords.add(rna.secondaryStructureAsTerminals());
@@ -131,7 +151,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		executor.shutdown();
 
 		RunResult best = runResults.stream()
-				.min(Comparator.comparingDouble(r -> r.best().bitsPerBase))
+				.min(Comparator.comparingDouble(r -> r.best().bitsPerBase()))
 				.orElse(null);
 
 		out.println("\n=== Run summary ===");
@@ -152,7 +172,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	                               final boolean logSteps,
 	                               final int runNumber) {
 		SearchState current = sampleParsableSeed(initialRuleCount, maxSeedAttempts);
-		Logging.printSeed(runNumber, current.grammar.size(), current.bitsPerBase);
+		Logging.printSeed(runNumber, current.grammar().size(), current.bitsPerBase());
 
 		int stepsTaken = 0;
 		int totalNeighborsEvaluated = 0;
@@ -165,7 +185,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			totalNeighborsEvaluated += outcome.evaluated();
 			if (!outcome.improved()) {
 				if (logSteps) {
-					Logging.printStepNoImprovement(runNumber, step, current.grammar.size(), current.bitsPerBase, outcome.evaluated());
+					Logging.printStepNoImprovement(runNumber, step, current.grammar().size(), current.bitsPerBase(), outcome.evaluated());
 				}
 				break;
 			}
@@ -178,8 +198,8 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 						outcome.previousBitsPerBase(),
 						outcome.evaluated(),
 						outcome.improvementNeighborIndex(),
-						current.grammar.size(),
-						current.bitsPerBase);
+						current.grammar().size(),
+						current.bitsPerBase());
 			}
 		}
 
@@ -188,8 +208,8 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 				seed,
 				stepsTaken,
 				totalNeighborsEvaluated,
-				current.grammar.size(),
-				current.bitsPerBase);
+				current.grammar().size(),
+				current.bitsPerBase());
 		return new RunResult(current, stats);
 	}
 
@@ -212,13 +232,13 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	private NeighborSearchOutcome firstImprovingNeighbor(final SearchState current,
 	                                                     final int maxSwapCandidates,
 	                                                     final int maxNeighborEvaluations) {
-		List<Move> moves = enumerateMoves(current.ruleMask, maxSwapCandidates);
+		List<Move> moves = enumerateMoves(current.ruleMask(), maxSwapCandidates);
 		Collections.shuffle(moves, random);
 		int evaluated = 0;
 		int neighborIndex = 0;
 		for (Move move : moves) {
 			if (evaluated >= maxNeighborEvaluations) break;
-			boolean[] candidateMask = applyMove(current.ruleMask, move);
+			boolean[] candidateMask = applyMove(current.ruleMask(), move);
 			SecondaryStructureGrammar candidateGrammar = buildGrammarIfValid(candidateMask);
 			if (candidateGrammar == null) continue;
 			SRFParser<Character> parser = new SRFParser<>(candidateGrammar);
@@ -227,17 +247,17 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			double score = score(candidateGrammar);
 			evaluated++;
 			neighborIndex++;
-			if (score + IMPROVEMENT_EPS < current.bitsPerBase) {
+			if (score + IMPROVEMENT_EPS < current.bitsPerBase()) {
 				return new NeighborSearchOutcome(
 						new SearchState(candidateMask, candidateGrammar, score),
 						evaluated,
 						neighborIndex,
-						current.grammar.size(),
-						current.bitsPerBase,
+						current.grammar().size(),
+						current.bitsPerBase(),
 						true);
 			}
 		}
-		return new NeighborSearchOutcome(null, evaluated, -1, current.grammar.size(), current.bitsPerBase, false);
+		return new NeighborSearchOutcome(null, evaluated, -1, current.grammar().size(), current.bitsPerBase(), false);
 	}
 
 	private List<Move> enumerateMoves(final boolean[] ruleMask, final int maxSwapCandidates) {
@@ -331,42 +351,6 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			}
 		}
 		return true;
-	}
-
-	private record ListBackedDataset(String name, List<RNAWithStructure> rnas) implements Dataset {
-
-		@Override
-		public int getSize() {
-			return rnas.size();
-		}
-
-
-		@Override
-		public Iterator<RNAWithStructure> iterator() {
-			return rnas.iterator();
-		}
-	}
-
-	public record SearchState(boolean[] ruleMask, SecondaryStructureGrammar grammar, double bitsPerBase) {
-	}
-
-	public record RunStats(int runNumber,
-	                       long seed,
-	                       int stepsTaken,
-	                       int totalNeighborsEvaluated,
-	                       int bestSize,
-	                       double bestBitsPerBase) {
-	}
-
-	public record RunResult(SearchState best, RunStats stats) {
-	}
-
-	private record NeighborSearchOutcome(SearchState next,
-	                                     int evaluated,
-	                                     int improvementNeighborIndex,
-	                                     int previousGrammarSize,
-	                                     double previousBitsPerBase,
-	                                     boolean improved) {
 	}
 
 	private record Move(Type type, int source, int target) {
