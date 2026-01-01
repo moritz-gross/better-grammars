@@ -79,17 +79,17 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	}
 
 	public static void main(String[] args) throws Exception {
-		final int nNonterminals = 6;
-		final int initialRuleCount = 25;             // start large, hill-climb will remove/swap/add rules
+		final int nNonterminals = 3;
+		final int initialRuleCount = 20;             // start reasonably large; hill-climb will remove/swap/add rules
 		final long seed = 42424242L;
-		final int maxIterations = 100;               // stop if no improving neighbor earlier
-		final int maxSwapCandidatesPerIter = 500;    // sample this many random swaps per iteration
-		final int maxNeighborEvaluationsPerIter = 800;
-		final int maxSeedAttempts = 200;             // retries to find a parsable seed
+		final int maxIterations = 15;                // stop if no improving neighbor earlier
+		final int maxSwapCandidatesPerIter = 100;    // sample this many random swaps per iteration
+		final int maxNeighborEvaluationsPerIter = 150;
+		final int maxSeedAttempts = 2000;            // retries to find a parsable seed
 		final boolean withNonCanonicalRules = false; // user preference
-		final int objectiveLimit = 25;               // limit objective dataset to first N RNAs (0 = full)
+		final int objectiveLimit = 1;                // limit objective dataset to first N RNAs (0 = full)
 
-		final Dataset objectiveDataset = new CachedDataset(new FolderBasedDataset("dowell-benchmark-10-percent"));
+		final Dataset objectiveDataset = new CachedDataset(new FolderBasedDataset("small-dataset"));
 		final Dataset parsableDataset = new CachedDataset(new FolderBasedDataset("minimal-parsable"));
 
 		LocalSearchExplorer explorer = new LocalSearchExplorer(
@@ -143,6 +143,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			if (!passesDataset(grammar, objectiveDatasetWords)) continue;
 			boolean[] mask = toMask(grammar);
 			double score = score(grammar);
+			if (!Double.isFinite(score)) continue;
 			System.out.printf("Seed candidate %d: size=%d bits/base=%.6f%n", attempt, grammar.size(), score);
 			return new SearchState(mask, grammar, score);
 		}
@@ -324,7 +325,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		}
 
 		static Move remove(final int target) {
-			return new Move(Type.REMOVE, target, -1);
+			return new Move(Type.REMOVE, target, target);
 		}
 
 		static Move swap(final int source, final int target) {
