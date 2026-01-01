@@ -16,6 +16,7 @@ import compression.grammargenerator.localsearch.dataclasses.NeighborSearchOutcom
 import compression.grammargenerator.localsearch.dataclasses.RunResult;
 import compression.grammargenerator.localsearch.dataclasses.RunStats;
 import compression.grammargenerator.localsearch.dataclasses.SearchState;
+import compression.grammargenerator.localsearch.dataclasses.SearchStrategy;
 import compression.parser.SRFParser;
 import compression.util.MyMultimap;
 
@@ -41,11 +42,8 @@ import static java.lang.System.out;
 /**
  * Simple hill-climbing local search over grammars:
  * start from a (random) parsable grammar, evaluate bits/base on the objective dataset,
- * then repeatedly take the first improving neighbor (add / remove / swap one rule)
- * until no improving move is found.
- * <p>
- * Hyperparameters are configured inside {@link #main(String[])} for now so the
- * search can be launched directly from an IDE.
+ * then repeatedly apply neighbor moves (add / remove / swap one rule) using either
+ * first-improvement or best-improvement until no improving move is found.
  */
 public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	private final Random random;
@@ -55,6 +53,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	private final List<List<Terminal<Character>>> parsableDatasetWords;
 	private final List<List<Terminal<Character>>> objectiveDatasetWords;
     private final boolean withNonCanonicalRules;
+	private final SearchStrategy searchStrategy;
 	private final Map<Rule, Integer> ruleToIndex;
 
 	private static final double IMPROVEMENT_EPS = 1e-3; // at least 1/1000
@@ -63,12 +62,14 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	                            final Dataset objectiveDataset,
 	                            final Dataset parsableDataset,
 	                            final boolean withNonCanonicalRules,
-	                            final int objectiveLimit) {
+	                            final int objectiveLimit,
+	                            final SearchStrategy searchStrategy) {
 		super(nNonterminals);
 		this.random = new Random(seed);
 		this.seed = seed;
 		this.objectiveDataset = objectiveDataset;
 		this.withNonCanonicalRules = withNonCanonicalRules;
+		this.searchStrategy = searchStrategy;
 		this.parsableDatasetWords = new ArrayList<>(parsableDataset.getSize());
 		for (RNAWithStructure rna : parsableDataset)
 			parsableDatasetWords.add(rna.secondaryStructureAsTerminals());
@@ -103,8 +104,10 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Config config = Config.defaults();
+		runWithConfig(Config.defaults());
+	}
 
+	public static List<RunResult> runWithConfig(final Config config) throws Exception {
 		final Dataset objectiveDataset = new CachedDataset(new FolderBasedDataset(config.objectiveDatasetName()));
 		final Dataset parsableDataset = new CachedDataset(new FolderBasedDataset(config.parsableDatasetName()));
 
@@ -124,14 +127,15 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 						objectiveDataset,
 						parsableDataset,
 						config.withNonCanonicalRules(),
-						config.objectiveLimit());
+						config.objectiveLimit(),
+						config.searchStrategy());
 				return explorer.runSingleRun(
 						config.initialRuleCount(),
 						config.maxSeedAttempts(),
 						config.maxSteps(),
 						config.maxSwapCandidatesPerStep(),
 						config.maxNeighborEvaluationsPerStep(),
-						config.logSteps(),
+						config.maxCandidatesPerStep(),
 						runNumber);
 			};
 			futures.add(executor.submit(task));
@@ -150,9 +154,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		}
 		executor.shutdown();
 
-		RunResult best = runResults.stream()
-				.min(Comparator.comparingDouble(r -> r.best().bitsPerBase()))
-				.orElse(null);
+		RunResult best = bestResult(runResults);
 
 		out.println("\n=== Run summary ===");
         for (RunResult r : runResults) {
@@ -162,6 +164,13 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		if (best != null) {
 			Logging.printBestOverall(best);
 		}
+		return runResults;
+	}
+
+	public static RunResult bestResult(List<RunResult> runResults) {
+		return runResults.stream()
+				.min(Comparator.comparingDouble(r -> r.best().bitsPerBase()))
+				.orElse(null);
 	}
 
 	private RunResult runSingleRun(final int initialRuleCount,
@@ -169,7 +178,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	                               final int maxSteps,
 	                               final int maxSwapCandidatesPerStep,
 	                               final int maxNeighborEvaluationsPerStep,
-	                               final boolean logSteps,
+	                               final int maxCandidatesPerStep,
 	                               final int runNumber) {
 		SearchState current = sampleParsableSeed(initialRuleCount, maxSeedAttempts);
 		Logging.printSeed(runNumber, current.grammar().size(), current.bitsPerBase());
@@ -178,29 +187,27 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		int totalNeighborsEvaluated = 0;
 		for (int step = 0; step < maxSteps; step++) {
 			stepsTaken++;
-			NeighborSearchOutcome outcome = firstImprovingNeighbor(
+			NeighborSearchOutcome outcome = searchNeighbors(
 					current,
 					maxSwapCandidatesPerStep,
-					maxNeighborEvaluationsPerStep);
+					maxNeighborEvaluationsPerStep,
+					maxCandidatesPerStep,
+					searchStrategy);
 			totalNeighborsEvaluated += outcome.evaluated();
 			if (!outcome.improved()) {
-				if (logSteps) {
-					Logging.printStepNoImprovement(runNumber, step, current.grammar().size(), current.bitsPerBase(), outcome.evaluated());
-				}
+				Logging.printStepNoImprovement(runNumber, step, current.grammar().size(), current.bitsPerBase(), outcome.evaluated());
 				break;
 			}
 			current = outcome.next();
-			if (logSteps) {
-				Logging.printStepImprovement(
-						runNumber,
-						step,
-						outcome.previousGrammarSize(),
-						outcome.previousBitsPerBase(),
-						outcome.evaluated(),
-						outcome.improvementNeighborIndex(),
-						current.grammar().size(),
-						current.bitsPerBase());
-			}
+			Logging.printStepImprovement(
+					runNumber,
+					step,
+					outcome.previousGrammarSize(),
+					outcome.previousBitsPerBase(),
+					outcome.evaluated(),
+					outcome.improvementNeighborIndex(),
+					current.grammar().size(),
+					current.bitsPerBase());
 		}
 
 		RunStats stats = new RunStats(
@@ -229,15 +236,22 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		throw new IllegalStateException("Could not find a parsable seed grammar after " + maxAttempts + " attempts");
 	}
 
-	private NeighborSearchOutcome firstImprovingNeighbor(final SearchState current,
-	                                                     final int maxSwapCandidates,
-	                                                     final int maxNeighborEvaluations) {
+	private NeighborSearchOutcome searchNeighbors(final SearchState current,
+	                                              final int maxSwapCandidates,
+	                                              final int maxNeighborEvaluations,
+	                                              final int maxCandidatesPerStep,
+	                                              final SearchStrategy strategy) {
 		List<Move> moves = enumerateMoves(current.ruleMask(), maxSwapCandidates);
 		Collections.shuffle(moves, random);
 		int evaluated = 0;
 		int neighborIndex = 0;
+		int considered = 0;
+		SearchState bestImprovement = null;
+		int bestImprovementIndex = -1;
 		for (Move move : moves) {
+			if (maxCandidatesPerStep >= 0 && considered >= maxCandidatesPerStep) break;
 			if (evaluated >= maxNeighborEvaluations) break;
+			considered++;
 			boolean[] candidateMask = applyMove(current.ruleMask(), move);
 			SecondaryStructureGrammar candidateGrammar = buildGrammarIfValid(candidateMask);
 			if (candidateGrammar == null) continue;
@@ -248,14 +262,30 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			evaluated++;
 			neighborIndex++;
 			if (score + IMPROVEMENT_EPS < current.bitsPerBase()) {
-				return new NeighborSearchOutcome(
-						new SearchState(candidateMask, candidateGrammar, score),
-						evaluated,
-						neighborIndex,
-						current.grammar().size(),
-						current.bitsPerBase(),
-						true);
+				SearchState candidateState = new SearchState(candidateMask, candidateGrammar, score);
+				if (strategy == SearchStrategy.FIRST_IMPROVEMENT) {
+					return new NeighborSearchOutcome(
+							candidateState,
+							evaluated,
+							neighborIndex,
+							current.grammar().size(),
+							current.bitsPerBase(),
+							true);
+				}
+				if (bestImprovement == null || score < bestImprovement.bitsPerBase()) {
+					bestImprovement = candidateState;
+					bestImprovementIndex = neighborIndex;
+				}
 			}
+		}
+		if (bestImprovement != null) {
+			return new NeighborSearchOutcome(
+					bestImprovement,
+					evaluated,
+					bestImprovementIndex,
+					current.grammar().size(),
+					current.bitsPerBase(),
+					true);
 		}
 		return new NeighborSearchOutcome(null, evaluated, -1, current.grammar().size(), current.bitsPerBase(), false);
 	}

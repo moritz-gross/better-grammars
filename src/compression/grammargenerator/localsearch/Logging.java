@@ -95,10 +95,11 @@ public static void printRunCompleted(RunStats stats) {
 		out.println("maxSteps = " + config.maxSteps());
 		out.println("maxSwapCandidatesPerStep = " + config.maxSwapCandidatesPerStep());
 		out.println("maxNeighborEvaluationsPerStep = " + config.maxNeighborEvaluationsPerStep());
+		out.println("maxCandidatesPerStep = " + config.maxCandidatesPerStep());
 		out.println("maxSeedAttempts = " + config.maxSeedAttempts());
 		out.println("numRuns = " + config.numRuns());
 		out.println("poolSize = " + config.poolSize());
-		out.println("logSteps = " + config.logSteps());
+		out.println("searchStrategy = " + config.searchStrategy());
 	}
 
 	public static String runLabel(int runNumber) {
