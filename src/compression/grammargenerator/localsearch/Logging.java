@@ -1,5 +1,6 @@
 package compression.grammargenerator.localsearch;
 
+import compression.data.Dataset;
 import compression.grammargenerator.localsearch.LocalSearchExplorer.RunResult;
 import compression.grammargenerator.localsearch.LocalSearchExplorer.RunStats;
 
@@ -79,6 +80,24 @@ public final class Logging {
 				best.stats().seed(),
 				best.best().grammar().size(),
 				best.best().bitsPerBase());
+	}
+
+	public static void printConfig(Config config, Dataset objectiveDataset, Dataset parsableDataset) {
+		out.println("=== Local search configuration ===");
+		out.println("nNonterminals = " + config.nNonterminals());
+		out.println("initialRuleCount = " + config.initialRuleCount());
+		out.println("baseSeed = " + config.baseSeed());
+		out.println("objectiveDataset = " + objectiveDataset);
+		out.println("objectiveLimit = " + config.objectiveLimit());
+		out.println("parsableDataset = " + parsableDataset);
+		out.println("withNonCanonicalRules = " + config.withNonCanonicalRules());
+		out.println("maxSteps = " + config.maxSteps());
+		out.println("maxSwapCandidatesPerStep = " + config.maxSwapCandidatesPerStep());
+		out.println("maxNeighborEvaluationsPerStep = " + config.maxNeighborEvaluationsPerStep());
+		out.println("maxSeedAttempts = " + config.maxSeedAttempts());
+		out.println("numRuns = " + config.numRuns());
+		out.println("poolSize = " + config.poolSize());
+		out.println("logSteps = " + config.logSteps());
 	}
 
 	public static String runLabel(int runNumber) {

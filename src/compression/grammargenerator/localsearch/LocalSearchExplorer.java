@@ -83,49 +83,35 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	}
 
 	public static void main(String[] args) throws Exception {
-		final int nNonterminals = 3;
-		final int initialRuleCount = 20;               // start reasonably large; hill-climb will remove/swap/add rules
-		final long baseSeed = 42;
-		final int maxSteps = 10;                       // stop if no improving neighbor earlier
-		final int maxSwapCandidatesPerStep = 100;      // sample this many random swaps per step
-		final int maxNeighborEvaluationsPerStep = 150;
-		final int maxSeedAttempts = 2000;              // retries to find a parsable seed
-		final boolean withNonCanonicalRules = false;   // user preference
-		final int objectiveLimit = -1;                 // limit objective dataset to first N RNAs (-1 means use all)
-		final int numRuns = 3;                         // how many independent hill-climb runs
-		final boolean logSteps = true;                 // toggle per-step logging
+		Config config = Config.defaults();
 
-		final Dataset objectiveDataset = new CachedDataset(new FolderBasedDataset("small-dataset"));
-		final Dataset parsableDataset = new CachedDataset(new FolderBasedDataset("minimal-parsable"));
+		final Dataset objectiveDataset = new CachedDataset(new FolderBasedDataset(config.objectiveDatasetName()));
+		final Dataset parsableDataset = new CachedDataset(new FolderBasedDataset(config.parsableDatasetName()));
 
-		out.println("=== Local search configuration ===");
-        for (String string : Arrays.asList("nNonterminals = " + nNonterminals, "initialRuleCount = " + initialRuleCount, "baseSeed = " + baseSeed, "objectiveDataset = " + objectiveDataset, "objectiveLimit = " + objectiveLimit, "parsableDataset = " + parsableDataset, "withNonCanonicalRules = " + withNonCanonicalRules, "maxSteps = " + maxSteps, "maxSwapCandidatesPerStep = " + maxSwapCandidatesPerStep, "maxNeighborEvaluationsPerStep = " + maxNeighborEvaluationsPerStep, "maxSeedAttempts = " + maxSeedAttempts, "numRuns = " + numRuns)) {
-            out.println(string);
-        }
+		Logging.printConfig(config, objectiveDataset, parsableDataset);
 
-        int poolSize = 2; // keep hardcoded for more transparency
-		ExecutorService executor = Executors.newFixedThreadPool(poolSize);
+		ExecutorService executor = Executors.newFixedThreadPool(config.poolSize());
 		List<Future<RunResult>> futures = new ArrayList<>();
 
-		for (int r = 0; r < numRuns; r++) {
+		for (int r = 0; r < config.numRuns(); r++) {
 			final int runNumber = r + 1;
-			final long runSeed = baseSeed + r;
+			final long runSeed = config.baseSeed() + r;
 			Callable<RunResult> task = () -> {
-				Logging.printRunStart(runNumber, numRuns, runSeed);
+				Logging.printRunStart(runNumber, config.numRuns(), runSeed);
 				LocalSearchExplorer explorer = new LocalSearchExplorer(
-						nNonterminals,
+						config.nNonterminals(),
 						runSeed,
 						objectiveDataset,
 						parsableDataset,
-						withNonCanonicalRules,
-						objectiveLimit);
+						config.withNonCanonicalRules(),
+						config.objectiveLimit());
 				return explorer.runSingleRun(
-						initialRuleCount,
-						maxSeedAttempts,
-						maxSteps,
-						maxSwapCandidatesPerStep,
-						maxNeighborEvaluationsPerStep,
-						logSteps,
+						config.initialRuleCount(),
+						config.maxSeedAttempts(),
+						config.maxSteps(),
+						config.maxSwapCandidatesPerStep(),
+						config.maxNeighborEvaluationsPerStep(),
+						config.logSteps(),
 						runNumber);
 			};
 			futures.add(executor.submit(task));
@@ -349,52 +335,52 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	private record ListBackedDataset(String name, List<RNAWithStructure> rnas) implements Dataset {
 
 		@Override
-			public int getSize() {
-				return rnas.size();
-			}
+		public int getSize() {
+			return rnas.size();
+		}
 
 
 		@Override
-			public Iterator<RNAWithStructure> iterator() {
-				return rnas.iterator();
-			}
+		public Iterator<RNAWithStructure> iterator() {
+			return rnas.iterator();
+		}
 	}
 
 	public record SearchState(boolean[] ruleMask, SecondaryStructureGrammar grammar, double bitsPerBase) {
 	}
 
 	public record RunStats(int runNumber,
-                           long seed,
-                           int stepsTaken,
-                           int totalNeighborsEvaluated,
-                           int bestSize,
-                           double bestBitsPerBase) {
+	                       long seed,
+	                       int stepsTaken,
+	                       int totalNeighborsEvaluated,
+	                       int bestSize,
+	                       double bestBitsPerBase) {
 	}
 
 	public record RunResult(SearchState best, RunStats stats) {
 	}
 
 	private record NeighborSearchOutcome(SearchState next,
-                                         int evaluated,
-                                         int improvementNeighborIndex,
-                                         int previousGrammarSize,
-                                         double previousBitsPerBase,
-                                         boolean improved) {
+	                                     int evaluated,
+	                                     int improvementNeighborIndex,
+	                                     int previousGrammarSize,
+	                                     double previousBitsPerBase,
+	                                     boolean improved) {
 	}
 
 	private record Move(Type type, int source, int target) {
-			enum Type {ADD, REMOVE, SWAP}
+		enum Type {ADD, REMOVE, SWAP}
 
 		static Move add(final int target) {
-				return new Move(Type.ADD, -1, target);
-			}
-
-			static Move remove(final int target) {
-				return new Move(Type.REMOVE, target, target);
-			}
-
-			static Move swap(final int source, final int target) {
-				return new Move(Type.SWAP, source, target);
-			}
+			return new Move(Type.ADD, -1, target);
 		}
+
+		static Move remove(final int target) {
+			return new Move(Type.REMOVE, target, target);
+		}
+
+		static Move swap(final int source, final int target) {
+			return new Move(Type.SWAP, source, target);
+		}
+	}
 }
