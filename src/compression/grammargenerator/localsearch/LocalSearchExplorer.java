@@ -111,8 +111,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			final int runNumber = r + 1;
 			final long runSeed = baseSeed + r;
 			Callable<RunResult> task = () -> {
-				String label = Logging.runLabel(runNumber);
-				out.printf("%n===== starting %s of %d (seed=%d) =====%n", label, numRuns, runSeed);
+				Logging.printRunStart(runNumber, numRuns, runSeed);
 				LocalSearchExplorer explorer = new LocalSearchExplorer(
 						nNonterminals,
 						runSeed,
@@ -138,12 +137,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 				RunResult result = futures.get(i).get();
 				runResults.add(result);
 				RunStats stats = result.stats();
-				out.printf("%s completed: size=%d bits/base=%.4f steps=%d neighbors=%d%n",
-						Logging.runLabel(stats.runNumber()),
-						stats.bestSize(),
-						stats.bestBitsPerBase(),
-						stats.stepsTaken(),
-						stats.totalNeighborsEvaluated());
+				Logging.printRunCompleted(stats);
 			} catch (ExecutionException e) {
 				out.printf("Run %d failed: %s%n", i + 1, e.getCause().getMessage());
 			}
@@ -155,23 +149,12 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 				.orElse(null);
 
 		out.println("\n=== Run summary ===");
-		for (int i = 0; i < runResults.size(); i++) {
-			RunResult r = runResults.get(i);
-			RunStats stats = r.stats();
-			out.printf("%s | seed=%d | steps=%d | bits/base=%.4f | size=%d | neighbors=%d%n",
-					Logging.runLabel(stats.runNumber()),
-					stats.seed(),
-					stats.stepsTaken(),
-					stats.bestBitsPerBase(),
-					stats.bestSize(),
-					stats.totalNeighborsEvaluated());
-		}
+        for (RunResult r : runResults) {
+            RunStats stats = r.stats();
+            Logging.printSummaryLine(stats);
+        }
 		if (best != null) {
-			out.printf("%nBest overall: %s seed=%d size=%d bits/base=%.4f%n",
-					Logging.runLabel(best.stats().runNumber()),
-					best.stats().seed(),
-					best.best().grammar().size(),
-					best.best().bitsPerBase());
+			Logging.printBestOverall(best);
 		}
 	}
 
@@ -183,11 +166,10 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	                               final boolean logSteps,
 	                               final int runNumber) {
 		SearchState current = sampleParsableSeed(initialRuleCount, maxSeedAttempts);
-		out.printf("%s seed: size=%d bits/base=%.4f%n", Logging.runLabel(runNumber), current.grammar.size(), current.bitsPerBase);
+		Logging.printSeed(runNumber, current.grammar.size(), current.bitsPerBase);
 
 		int stepsTaken = 0;
 		int totalNeighborsEvaluated = 0;
-		String label = Logging.runLabel(runNumber);
 		for (int step = 0; step < maxSteps; step++) {
 			stepsTaken++;
 			NeighborSearchOutcome outcome = firstImprovingNeighbor(
@@ -197,15 +179,14 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			totalNeighborsEvaluated += outcome.evaluated();
 			if (!outcome.improved()) {
 				if (logSteps) {
-					out.printf("%s step %d: size=%d score=%.4f | explored %d neighbors, no improvement%n",
-							label, step, current.grammar.size(), current.bitsPerBase, outcome.evaluated());
+					Logging.printStepNoImprovement(runNumber, step, current.grammar.size(), current.bitsPerBase, outcome.evaluated());
 				}
 				break;
 			}
 			current = outcome.next();
 			if (logSteps) {
-				out.printf("%s step %d: size=%d score=%.4f | explored %d neighbors (improvement at #%d) -> size=%d score=%.4f%n",
-						label,
+				Logging.printStepImprovement(
+						runNumber,
 						step,
 						outcome.previousGrammarSize(),
 						outcome.previousBitsPerBase(),
@@ -379,26 +360,26 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			}
 	}
 
-	private record SearchState(boolean[] ruleMask, SecondaryStructureGrammar grammar, double bitsPerBase) {
+	public record SearchState(boolean[] ruleMask, SecondaryStructureGrammar grammar, double bitsPerBase) {
 	}
 
-	private record RunStats(int runNumber,
-	                        long seed,
-	                        int stepsTaken,
-	                        int totalNeighborsEvaluated,
-	                        int bestSize,
-	                        double bestBitsPerBase) {
+	public record RunStats(int runNumber,
+                           long seed,
+                           int stepsTaken,
+                           int totalNeighborsEvaluated,
+                           int bestSize,
+                           double bestBitsPerBase) {
 	}
 
-	private record RunResult(SearchState best, RunStats stats) {
+	public record RunResult(SearchState best, RunStats stats) {
 	}
 
 	private record NeighborSearchOutcome(SearchState next,
-	                                     int evaluated,
-	                                     int improvementNeighborIndex,
-	                                     int previousGrammarSize,
-	                                     double previousBitsPerBase,
-	                                     boolean improved) {
+                                         int evaluated,
+                                         int improvementNeighborIndex,
+                                         int previousGrammarSize,
+                                         double previousBitsPerBase,
+                                         boolean improved) {
 	}
 
 	private record Move(Type type, int source, int target) {
