@@ -64,3 +64,10 @@ tasks.named('test') {
 tasks.named('clean') {
     delete 'dist'
 }
+
+tasks.register('runLocalSearchExplorer', JavaExec) {
+    group = 'application'
+    description = 'Run the local search explorer'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'compression.grammargenerator.localsearch.LocalSearchExplorer'
+}

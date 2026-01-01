@@ -197,8 +197,9 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		RandomGrammarExplorer generator = new RandomGrammarExplorer(nNonterminals);
 		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
 			SecondaryStructureGrammar grammar = generator.randomGrammar(random, nRules);
-			if (!passesDataset(grammar, parsableDatasetWords)) continue;
-			if (!passesDataset(grammar, objectiveDatasetWords)) continue;
+			SRFParser<Character> parser = new SRFParser<>(grammar);
+			if (!passesDataset(parser, parsableDatasetWords)) continue;
+			if (!passesDataset(parser, objectiveDatasetWords)) continue;
 			boolean[] mask = toMask(grammar);
 			double score = score(grammar);
 			if (!Double.isFinite(score)) continue;
@@ -220,8 +221,9 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			boolean[] candidateMask = applyMove(current.ruleMask, move);
 			SecondaryStructureGrammar candidateGrammar = buildGrammarIfValid(candidateMask);
 			if (candidateGrammar == null) continue;
-			if (!passesDataset(candidateGrammar, parsableDatasetWords)) continue;
-			if (!passesDataset(candidateGrammar, objectiveDatasetWords)) continue;
+			SRFParser<Character> parser = new SRFParser<>(candidateGrammar);
+			if (!passesDataset(parser, parsableDatasetWords)) continue;
+			if (!passesDataset(parser, objectiveDatasetWords)) continue;
 			double score = score(candidateGrammar);
 			evaluated++;
 			neighborIndex++;
@@ -322,8 +324,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		return mask;
 	}
 
-	private boolean passesDataset(final SecondaryStructureGrammar grammar, final List<List<Terminal<Character>>> words) {
-		SRFParser<Character> ssParser = new SRFParser<>(grammar);
+	private boolean passesDataset(final SRFParser<Character> ssParser, final List<List<Terminal<Character>>> words) {
 		for (List<Terminal<Character>> word : words) {
 			if (!ssParser.parsable(word)) {
 				return false;
