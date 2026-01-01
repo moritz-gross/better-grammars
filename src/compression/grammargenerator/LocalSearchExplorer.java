@@ -87,7 +87,8 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		final int maxNeighborEvaluationsPerIter = 150;
 		final int maxSeedAttempts = 2000;            // retries to find a parsable seed
 		final boolean withNonCanonicalRules = false; // user preference
-		final int objectiveLimit = 1;                // limit objective dataset to first N RNAs (0 = full)
+		final int objectiveLimit = -1;               // limit objective dataset to first N RNAs (-1 means use all)
+		final int numRestarts = 3;                   // how many independent hill-climb runs
 
 		final Dataset objectiveDataset = new CachedDataset(new FolderBasedDataset("small-dataset"));
 		final Dataset parsableDataset = new CachedDataset(new FolderBasedDataset("minimal-parsable"));
@@ -111,13 +112,43 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		System.out.println("maxIterations = " + maxIterations);
 		System.out.println("maxSwapCandidatesPerIter = " + maxSwapCandidatesPerIter);
 		System.out.println("maxNeighborEvaluationsPerIter = " + maxNeighborEvaluationsPerIter);
+		System.out.println("numRestarts = " + numRestarts);
 
-		SearchState current = explorer.sampleParsableSeed(initialRuleCount, maxSeedAttempts);
+		List<SearchState> runResults = new ArrayList<>();
+		for (int r = 0; r < numRestarts; r++) {
+			System.out.printf("%n===== Restart %d of %d =====%n", r + 1, numRestarts);
+			try {
+				SearchState result = explorer.runSingleSearch(
+						initialRuleCount,
+						maxSeedAttempts,
+						maxIterations,
+						maxSwapCandidatesPerIter,
+						maxNeighborEvaluationsPerIter);
+				runResults.add(result);
+				System.out.printf("Restart %d best: size=%d bits/base=%.6f%n", r + 1, result.grammar.size(), result.bitsPerBase);
+			} catch (IllegalStateException e) {
+				System.out.printf("Restart %d failed to find a seed: %s%n", r + 1, e.getMessage());
+			}
+		}
+
+		System.out.println("\n=== Restart summary ===");
+		for (int i = 0; i < runResults.size(); i++) {
+			SearchState s = runResults.get(i);
+			System.out.printf("Run %d: size=%d bits/base=%.6f%n", i + 1, s.grammar.size(), s.bitsPerBase);
+		}
+	}
+
+	private SearchState runSingleSearch(final int initialRuleCount,
+	                                    final int maxSeedAttempts,
+	                                    final int maxIterations,
+	                                    final int maxSwapCandidatesPerIter,
+	                                    final int maxNeighborEvaluationsPerIter) {
+		SearchState current = sampleParsableSeed(initialRuleCount, maxSeedAttempts);
 		System.out.printf("Seed grammar size=%d bits/base=%.4f%n", current.grammar.size(), current.bitsPerBase);
 
 		for (int iter = 0; iter < maxIterations; iter++) {
 			System.out.printf("%nIteration %d: size=%d score=%.6f%n", iter, current.grammar.size(), current.bitsPerBase);
-			SearchState next = explorer.firstImprovingNeighbor(
+			SearchState next = firstImprovingNeighbor(
 					current,
 					maxSwapCandidatesPerIter,
 					maxNeighborEvaluationsPerIter);
@@ -129,10 +160,11 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			System.out.printf(" -> accepted move: size=%d score=%.6f%n", current.grammar.size(), current.bitsPerBase);
 		}
 
-		System.out.println("\n=== Best grammar found ===");
+		System.out.println("\n=== Best grammar for this restart ===");
 		System.out.println("Size = " + current.grammar.size());
 		System.out.println("Bits/base = " + current.bitsPerBase);
 		System.out.println(current.grammar);
+		return current;
 	}
 
 	private SearchState sampleParsableSeed(final int nRules, final int maxAttempts) {
@@ -295,41 +327,22 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		}
 	}
 
-	private static class SearchState {
-		final boolean[] ruleMask;
-		final SecondaryStructureGrammar grammar;
-		final double bitsPerBase;
-
-		SearchState(final boolean[] ruleMask, final SecondaryStructureGrammar grammar, final double bitsPerBase) {
-			this.ruleMask = ruleMask;
-			this.grammar = grammar;
-			this.bitsPerBase = bitsPerBase;
-		}
+	private record SearchState(boolean[] ruleMask, SecondaryStructureGrammar grammar, double bitsPerBase) {
 	}
 
-	private static class Move {
-		enum Type {ADD, REMOVE, SWAP}
-
-		final Type type;
-		final int source;
-		final int target;
-
-		private Move(final Type type, final int source, final int target) {
-			this.type = type;
-			this.source = source;
-			this.target = target;
-		}
+	private record Move(Type type, int source, int target) {
+			enum Type {ADD, REMOVE, SWAP}
 
 		static Move add(final int target) {
-			return new Move(Type.ADD, -1, target);
-		}
+				return new Move(Type.ADD, -1, target);
+			}
 
-		static Move remove(final int target) {
-			return new Move(Type.REMOVE, target, target);
-		}
+			static Move remove(final int target) {
+				return new Move(Type.REMOVE, target, target);
+			}
 
-		static Move swap(final int source, final int target) {
-			return new Move(Type.SWAP, source, target);
+			static Move swap(final int source, final int target) {
+				return new Move(Type.SWAP, source, target);
+			}
 		}
-	}
 }
