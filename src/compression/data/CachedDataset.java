@@ -34,8 +34,8 @@ public class CachedDataset implements Dataset {
 	}
 
 	@Override
-	public String getName() {
-		return dataset.getName();
+	public String name() {
+		return dataset.name();
 	}
 
 	@Override

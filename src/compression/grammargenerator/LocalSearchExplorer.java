@@ -44,6 +44,40 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 
 	private static final double IMPROVEMENT_EPS = 1e-9;
 
+	/**
+	 * Convenience smoke-run for tests: fast settings on minimal-parsable only.
+	 */
+	static QuickResult runQuickSmokeTest() {
+		final int nNonterminals = 3;
+		final int initialRuleCount = 12;
+		final long seed = 123456L;
+		final int maxIterations = 10;
+		final int maxSwapCandidatesPerIter = 50;
+		final int maxNeighborEvaluationsPerIter = 80;
+		final int maxSeedAttempts = 500;
+		final boolean withNonCanonicalRules = false;
+		final int objectiveLimit = -1;
+
+		final Dataset objectiveDataset = new CachedDataset(new FolderBasedDataset("minimal-parsable"));
+		final Dataset parsableDataset = new CachedDataset(new FolderBasedDataset("minimal-parsable"));
+
+		LocalSearchExplorer explorer = new LocalSearchExplorer(
+				nNonterminals,
+				seed,
+				objectiveDataset,
+				parsableDataset,
+				withNonCanonicalRules,
+				objectiveLimit);
+
+		SearchState state = explorer.runSingleSearch(
+				initialRuleCount,
+				maxSeedAttempts,
+				maxIterations,
+				maxSwapCandidatesPerIter,
+				maxNeighborEvaluationsPerIter);
+		return new QuickResult(state.bitsPerBase(), state.grammar().size());
+	}
+
 	private LocalSearchExplorer(final int nNonterminals,
 	                            final long seed,
 	                            final Dataset objectiveDataset,
@@ -66,7 +100,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			rnas = rnas.subList(0, objectiveLimit);
 		}
 		this.objectiveRnasLimited = Collections.unmodifiableList(rnas);
-		this.objectiveDatasetLimited = new ListBackedDataset(objectiveDataset.getName() + "-limited", objectiveRnasLimited);
+		this.objectiveDatasetLimited = new ListBackedDataset(objectiveDataset.name() + "-limited", objectiveRnasLimited);
 
 		this.objectiveDatasetWords = new ArrayList<>(objectiveRnasLimited.size());
 		for (RNAWithStructure rna : objectiveRnasLimited) {
@@ -171,7 +205,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		RandomGrammarExplorer generator = new RandomGrammarExplorer(nNonterminals);
 		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
 			SecondaryStructureGrammar grammar = generator.randomGrammar(random, nRules);
-			if (!passesParsable(grammar)) continue;
+			if (!passesDataset(grammar, parsableDatasetWords)) continue;
 			if (!passesDataset(grammar, objectiveDatasetWords)) continue;
 			boolean[] mask = toMask(grammar);
 			double score = score(grammar);
@@ -193,7 +227,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			boolean[] candidateMask = applyMove(current.ruleMask, move);
 			SecondaryStructureGrammar candidateGrammar = buildGrammarIfValid(candidateMask);
 			if (candidateGrammar == null) continue;
-			if (!passesParsable(candidateGrammar)) continue;
+			if (!passesDataset(candidateGrammar, parsableDatasetWords)) continue;
 			if (!passesDataset(candidateGrammar, objectiveDatasetWords)) continue;
 			double score = score(candidateGrammar);
 			evaluated++;
@@ -268,10 +302,6 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		}
 	}
 
-	private boolean passesParsable(final SecondaryStructureGrammar grammar) {
-		return passesDataset(grammar, parsableDatasetWords);
-	}
-
 	private double score(final SecondaryStructureGrammar grammar) {
 		try {
 			return getBitsPerBase(objectiveDatasetLimited, RuleProbType.ADAPTIVE, grammar, withNonCanonicalRules);
@@ -302,32 +332,24 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		return true;
 	}
 
-	private static class ListBackedDataset implements Dataset {
-		private final String name;
-		private final List<RNAWithStructure> rnas;
-
-		ListBackedDataset(final String name, final List<RNAWithStructure> rnas) {
-			this.name = name;
-			this.rnas = rnas;
-		}
+	private record ListBackedDataset(String name, List<RNAWithStructure> rnas) implements Dataset {
 
 		@Override
-		public int getSize() {
-			return rnas.size();
-		}
+			public int getSize() {
+				return rnas.size();
+			}
+
 
 		@Override
-		public String getName() {
-			return name;
+			public Iterator<RNAWithStructure> iterator() {
+				return rnas.iterator();
+			}
 		}
-
-		@Override
-		public Iterator<RNAWithStructure> iterator() {
-			return rnas.iterator();
-		}
-	}
 
 	private record SearchState(boolean[] ruleMask, SecondaryStructureGrammar grammar, double bitsPerBase) {
+	}
+
+	record QuickResult(double bitsPerBase, int grammarSize) {
 	}
 
 	private record Move(Type type, int source, int target) {

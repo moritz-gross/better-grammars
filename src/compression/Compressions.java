@@ -88,11 +88,11 @@ public class Compressions {
 
 
         String filename = "compression-ratios-"
-                + dataset.getName()
+                + dataset.name()
                 + "-grammars-" + grammarFolder.folderName
                 + "-withNCR-" + withNonCanonicalRules
                 + "-model-" + model
-                + (trainingDataset != null ? "-training-data-" + trainingDataset.getName() : "")
+                + (trainingDataset != null ? "-training-data-" + trainingDataset.name() : "")
                 + "-" + DATE_TIME_FORMATTER.format(LocalDateTime.now());
         CSVFile out = new CSVFile(new File(filename + ".csv"), csvHeader);
         // Print all parameters to a file
