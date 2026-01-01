@@ -29,6 +29,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static java.lang.System.out;
+
 /**
  * Simple hill-climbing local search over grammars:
  * start from a (random) parsable grammar, evaluate bits/base on the objective dataset,
@@ -60,60 +62,45 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		this.objectiveDataset = objectiveDataset;
 		this.withNonCanonicalRules = withNonCanonicalRules;
 		this.parsableDatasetWords = new ArrayList<>(parsableDataset.getSize());
-		for (RNAWithStructure rna : parsableDataset) {
+		for (RNAWithStructure rna : parsableDataset)
 			parsableDatasetWords.add(rna.secondaryStructureAsTerminals());
-		}
 		List<RNAWithStructure> rnas = new ArrayList<>(objectiveDataset.getSize());
-		for (RNAWithStructure rna : objectiveDataset) {
+		for (RNAWithStructure rna : objectiveDataset)
 			rnas.add(rna);
-		}
-		if (objectiveLimit > 0 && objectiveLimit < rnas.size()) {
+		if (objectiveLimit > 0 && objectiveLimit < rnas.size())
 			rnas = rnas.subList(0, objectiveLimit);
-		}
         List<RNAWithStructure> objectiveRnasLimited = Collections.unmodifiableList(rnas);
 		this.objectiveDatasetLimited = new ListBackedDataset(objectiveDataset.name() + "-limited", objectiveRnasLimited);
-
 		this.objectiveDatasetWords = new ArrayList<>(objectiveRnasLimited.size());
-		for (RNAWithStructure rna : objectiveRnasLimited) {
+		for (RNAWithStructure rna : objectiveRnasLimited)
 			objectiveDatasetWords.add(rna.secondaryStructureAsTerminals());
-		}
 		this.ruleToIndex = new HashMap<>(allPossibleRules.length);
-		for (int i = 0; i < allPossibleRules.length; i++) {
+		for (int i = 0; i < allPossibleRules.length; i++)
 			ruleToIndex.put(allPossibleRules[i], i);
-		}
 	}
 
 	public static void main(String[] args) throws Exception {
 		final int nNonterminals = 3;
-		final int initialRuleCount = 20;             // start reasonably large; hill-climb will remove/swap/add rules
+		final int initialRuleCount = 20;               // start reasonably large; hill-climb will remove/swap/add rules
 		final long baseSeed = 42424242L;
-		final int maxSteps = 100;                    // stop if no improving neighbor earlier
-		final int maxSwapCandidatesPerStep = 100;    // sample this many random swaps per step
+		final int maxSteps = 5;                        // stop if no improving neighbor earlier
+		final int maxSwapCandidatesPerStep = 100;      // sample this many random swaps per step
 		final int maxNeighborEvaluationsPerStep = 150;
-		final int maxSeedAttempts = 2000;            // retries to find a parsable seed
-		final boolean withNonCanonicalRules = false; // user preference
-		final int objectiveLimit = -1;               // limit objective dataset to first N RNAs (-1 means use all)
-		final int numRuns = 3;                       // how many independent hill-climb runs
-		final boolean logSteps = true;              // toggle per-step logging
+		final int maxSeedAttempts = 2000;              // retries to find a parsable seed
+		final boolean withNonCanonicalRules = false;   // user preference
+		final int objectiveLimit = -1;                 // limit objective dataset to first N RNAs (-1 means use all)
+		final int numRuns = 3;                         // how many independent hill-climb runs
+		final boolean logSteps = true;                 // toggle per-step logging
 
 		final Dataset objectiveDataset = new CachedDataset(new FolderBasedDataset("small-dataset"));
 		final Dataset parsableDataset = new CachedDataset(new FolderBasedDataset("minimal-parsable"));
 
-		System.out.println("=== Local search configuration ===");
-		System.out.println("nNonterminals = " + nNonterminals);
-		System.out.println("initialRuleCount = " + initialRuleCount);
-		System.out.println("baseSeed = " + baseSeed);
-		System.out.println("objectiveDataset = " + objectiveDataset);
-		System.out.println("objectiveLimit = " + objectiveLimit);
-		System.out.println("parsableDataset = " + parsableDataset);
-		System.out.println("withNonCanonicalRules = " + withNonCanonicalRules);
-		System.out.println("maxSteps = " + maxSteps);
-		System.out.println("maxSwapCandidatesPerStep = " + maxSwapCandidatesPerStep);
-		System.out.println("maxNeighborEvaluationsPerStep = " + maxNeighborEvaluationsPerStep);
-		System.out.println("maxSeedAttempts = " + maxSeedAttempts);
-		System.out.println("numRuns = " + numRuns);
+		out.println("=== Local search configuration ===");
+        for (String string : Arrays.asList("nNonterminals = " + nNonterminals, "initialRuleCount = " + initialRuleCount, "baseSeed = " + baseSeed, "objectiveDataset = " + objectiveDataset, "objectiveLimit = " + objectiveLimit, "parsableDataset = " + parsableDataset, "withNonCanonicalRules = " + withNonCanonicalRules, "maxSteps = " + maxSteps, "maxSwapCandidatesPerStep = " + maxSwapCandidatesPerStep, "maxNeighborEvaluationsPerStep = " + maxNeighborEvaluationsPerStep, "maxSeedAttempts = " + maxSeedAttempts, "numRuns = " + numRuns)) {
+            out.println(string);
+        }
 
-		int poolSize = 2; // hardcoded for now
+        int poolSize = 2; // hardcoded for now
 		ExecutorService executor = Executors.newFixedThreadPool(poolSize);
 		List<Future<SearchState>> futures = new ArrayList<>();
 
@@ -121,7 +108,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			final int runNumber = r + 1;
 			final long runSeed = baseSeed + r;
 			Callable<SearchState> task = () -> {
-				System.out.printf("%n===== Run %d of %d (seed=%d) =====%n", runNumber, numRuns, runSeed);
+				out.printf("%n===== starting run %d of %d (seed=%d) =====%n", runNumber, numRuns, runSeed);
 				LocalSearchExplorer explorer = new LocalSearchExplorer(
 						nNonterminals,
 						runSeed,
@@ -147,9 +134,9 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			try {
 				SearchState state = futures.get(i).get();
 				runResults.add(state);
-				System.out.printf("Run %d completed: size=%d bits/base=%.4f%n", i + 1, state.grammar.size(), state.bitsPerBase);
+				out.printf("Run %d completed: size=%d bits/base=%.4f%n", i + 1, state.grammar.size(), state.bitsPerBase);
 			} catch (ExecutionException e) {
-				System.out.printf("Run %d failed: %s%n", i + 1, e.getCause().getMessage());
+				out.printf("Run %d failed: %s%n", i + 1, e.getCause().getMessage());
 			}
 		}
 		executor.shutdown();
@@ -158,13 +145,13 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 				.min(Comparator.comparingDouble(SearchState::bitsPerBase))
 				.orElse(null);
 
-		System.out.println("\n=== Run summary ===");
+		out.println("\n=== Run summary ===");
 		for (int i = 0; i < runResults.size(); i++) {
 			SearchState s = runResults.get(i);
-			System.out.printf("Run %d: size=%d bits/base=%.4f%n", i + 1, s.grammar.size(), s.bitsPerBase);
+			out.printf("Run %d: size=%d bits/base=%.4f%n", i + 1, s.grammar.size(), s.bitsPerBase);
 		}
 		if (best != null) {
-			System.out.printf("%nBest overall: size=%d bits/base=%.4f%n", best.grammar.size(), best.bitsPerBase);
+			out.printf("%nBest overall: size=%d bits/base=%.4f%n", best.grammar.size(), best.bitsPerBase);
 		}
 	}
 
@@ -177,7 +164,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	                                 final int runNumber,
 	                                 final int totalRuns) {
 		SearchState current = sampleParsableSeed(initialRuleCount, maxSeedAttempts);
-		System.out.printf("Run %d/%d seed: size=%d bits/base=%.4f%n", runNumber, totalRuns, current.grammar.size(), current.bitsPerBase);
+		out.printf("Run %d/%d seed: size=%d bits/base=%.4f%n", runNumber, totalRuns, current.grammar.size(), current.bitsPerBase);
 
 		for (int step = 0; step < maxSteps; step++) {
 			NeighborSearchOutcome outcome = firstImprovingNeighbor(
@@ -185,18 +172,18 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 					maxSwapCandidatesPerStep,
 					maxNeighborEvaluationsPerStep);
 			if (logSteps) {
-				System.out.printf("run %d", runNumber);
+				out.printf("run %d ", runNumber);
 			}
 			if (!outcome.improved()) {
 				if (logSteps) {
-					System.out.printf("Step %d: size=%d score=%.4f | explored %d neighbors, no improvement%n",
+					out.printf("Step %d: size=%d score=%.4f | explored %d neighbors, no improvement%n",
 							step, current.grammar.size(), current.bitsPerBase, outcome.evaluated());
 				}
 				break;
 			}
 			current = outcome.next();
 			if (logSteps) {
-				System.out.printf("Step %d: size=%d score=%.4f | explored %d neighbors (improvement at #%d) -> size=%d score=%.4f%n",
+				out.printf("Step %d: size=%d score=%.4f | explored %d neighbors (improvement at #%d) -> size=%d score=%.4f%n",
 						step,
 						outcome.previousGrammarSize(),
 						outcome.previousBitsPerBase(),
@@ -219,7 +206,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			boolean[] mask = toMask(grammar);
 			double score = score(grammar);
 			if (!Double.isFinite(score)) continue;
-			System.out.printf("Seed candidate %d: size=%d bits/base=%.4f%n", attempt, grammar.size(), score);
+			out.printf("Seed candidate %d: size=%d bits/base=%.4f%n", attempt, grammar.size(), score);
 			return new SearchState(mask, grammar, score);
 		}
 		throw new IllegalStateException("Could not find a parsable seed grammar after " + maxAttempts + " attempts");
