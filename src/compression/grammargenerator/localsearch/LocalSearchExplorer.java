@@ -1,4 +1,4 @@
-package compression.grammargenerator;
+package compression.grammargenerator.localsearch;
 
 import compression.RuleProbType;
 import compression.data.CachedDataset;
@@ -9,6 +9,8 @@ import compression.grammar.RNAWithStructure;
 import compression.grammar.Rule;
 import compression.grammar.SecondaryStructureGrammar;
 import compression.grammar.Terminal;
+import compression.grammargenerator.AbstractGrammarExplorer;
+import compression.grammargenerator.RandomGrammarExplorer;
 import compression.parser.SRFParser;
 import compression.util.MyMultimap;
 
@@ -51,15 +53,6 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	private final Map<Rule, Integer> ruleToIndex;
 
 	private static final double IMPROVEMENT_EPS = 1e-3; // at least 1/1000
-	private static final String[] RUN_COLORS = {
-			"\u001B[34m", // blue
-			"\u001B[32m", // green
-			"\u001B[36m", // cyan
-			"\u001B[35m", // magenta
-			"\u001B[33m"  // yellow
-	};
-	private static final String ANSI_RESET = "\u001B[0m";
-
 	private LocalSearchExplorer(final int nNonterminals,
 	                            final long seed,
 	                            final Dataset objectiveDataset,
@@ -101,7 +94,6 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		final int objectiveLimit = -1;                 // limit objective dataset to first N RNAs (-1 means use all)
 		final int numRuns = 3;                         // how many independent hill-climb runs
 		final boolean logSteps = true;                 // toggle per-step logging
-		final boolean useAnsiColors = true;            // color run labels in output
 
 		final Dataset objectiveDataset = new CachedDataset(new FolderBasedDataset("small-dataset"));
 		final Dataset parsableDataset = new CachedDataset(new FolderBasedDataset("minimal-parsable"));
@@ -111,7 +103,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
             out.println(string);
         }
 
-        int poolSize = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+        int poolSize = 2; // keep hardcoded for more transparency
 		ExecutorService executor = Executors.newFixedThreadPool(poolSize);
 		List<Future<RunResult>> futures = new ArrayList<>();
 
@@ -119,7 +111,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			final int runNumber = r + 1;
 			final long runSeed = baseSeed + r;
 			Callable<RunResult> task = () -> {
-				String label = runLabel(runNumber, useAnsiColors);
+				String label = Logging.runLabel(runNumber);
 				out.printf("%n===== starting %s of %d (seed=%d) =====%n", label, numRuns, runSeed);
 				LocalSearchExplorer explorer = new LocalSearchExplorer(
 						nNonterminals,
@@ -135,9 +127,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 						maxSwapCandidatesPerStep,
 						maxNeighborEvaluationsPerStep,
 						logSteps,
-						runNumber,
-						numRuns,
-						useAnsiColors);
+						runNumber);
 			};
 			futures.add(executor.submit(task));
 		}
@@ -149,7 +139,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 				runResults.add(result);
 				RunStats stats = result.stats();
 				out.printf("%s completed: size=%d bits/base=%.4f steps=%d neighbors=%d%n",
-						runLabel(stats.runNumber(), useAnsiColors),
+						Logging.runLabel(stats.runNumber()),
 						stats.bestSize(),
 						stats.bestBitsPerBase(),
 						stats.stepsTaken(),
@@ -169,7 +159,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			RunResult r = runResults.get(i);
 			RunStats stats = r.stats();
 			out.printf("%s | seed=%d | steps=%d | bits/base=%.4f | size=%d | neighbors=%d%n",
-					runLabel(stats.runNumber(), useAnsiColors),
+					Logging.runLabel(stats.runNumber()),
 					stats.seed(),
 					stats.stepsTaken(),
 					stats.bestBitsPerBase(),
@@ -178,7 +168,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		}
 		if (best != null) {
 			out.printf("%nBest overall: %s seed=%d size=%d bits/base=%.4f%n",
-					runLabel(best.stats().runNumber(), useAnsiColors),
+					Logging.runLabel(best.stats().runNumber()),
 					best.stats().seed(),
 					best.best().grammar().size(),
 					best.best().bitsPerBase());
@@ -191,15 +181,13 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	                               final int maxSwapCandidatesPerStep,
 	                               final int maxNeighborEvaluationsPerStep,
 	                               final boolean logSteps,
-	                               final int runNumber,
-	                               final int totalRuns,
-	                               final boolean useAnsiColors) {
+	                               final int runNumber) {
 		SearchState current = sampleParsableSeed(initialRuleCount, maxSeedAttempts);
-		out.printf("%s seed: size=%d bits/base=%.4f%n", runLabel(runNumber, useAnsiColors), current.grammar.size(), current.bitsPerBase);
+		out.printf("%s seed: size=%d bits/base=%.4f%n", Logging.runLabel(runNumber), current.grammar.size(), current.bitsPerBase);
 
 		int stepsTaken = 0;
 		int totalNeighborsEvaluated = 0;
-		String label = runLabel(runNumber, useAnsiColors);
+		String label = Logging.runLabel(runNumber);
 		for (int step = 0; step < maxSteps; step++) {
 			stepsTaken++;
 			NeighborSearchOutcome outcome = firstImprovingNeighbor(
@@ -411,20 +399,6 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	                                     int previousGrammarSize,
 	                                     double previousBitsPerBase,
 	                                     boolean improved) {
-	}
-
-	private static String colorForRun(int runNumber, boolean enableAnsi) {
-		if (!enableAnsi) return "";
-		return RUN_COLORS[(runNumber - 1) % RUN_COLORS.length];
-	}
-
-	private static String runLabel(int runNumber, boolean enableAnsi) {
-		String base = "Run " + runNumber;
-		if (!enableAnsi) return base;
-		return colorForRun(runNumber, true) + base + ANSI_RESET;
-	}
-
-	record QuickResult(double bitsPerBase, int grammarSize) {
 	}
 
 	private record Move(Type type, int source, int target) {
