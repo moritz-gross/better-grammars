@@ -221,7 +221,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			if (!passesDataset(parser, parsableDatasetWords)) continue;
 			if (!passesDataset(parser, objectiveDatasetWords)) continue;
 			boolean[] mask = toMask(grammar);
-			double score = score(grammar);
+			double score = getBitsPerBase(objectiveDatasetLimited, RuleProbType.ADAPTIVE, grammar, withNonCanonicalRules);
 			if (!Double.isFinite(score)) continue;
 			out.printf("Seed candidate %d: size=%d bits/base=%.4f%n", attempt, grammar.size(), score);
 			return new SearchState(mask, grammar, score);
@@ -244,7 +244,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			SRFParser<Character> parser = new SRFParser<>(candidateGrammar);
 			if (!passesDataset(parser, parsableDatasetWords)) continue;
 			if (!passesDataset(parser, objectiveDatasetWords)) continue;
-			double score = score(candidateGrammar);
+			double score = getBitsPerBase(objectiveDatasetLimited, RuleProbType.ADAPTIVE, candidateGrammar, withNonCanonicalRules);
 			evaluated++;
 			neighborIndex++;
 			if (score + IMPROVEMENT_EPS < current.bitsPerBase()) {
@@ -321,15 +321,6 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			return new SecondaryStructureGrammar(name, nonTerminals[nNonterminals - 1], rules);
 		} catch (IllegalArgumentException e) {
 			return null; // e.g., start symbol lost all rules
-		}
-	}
-
-	private double score(final SecondaryStructureGrammar grammar) {
-		try {
-			return getBitsPerBase(objectiveDatasetLimited, RuleProbType.ADAPTIVE, grammar, withNonCanonicalRules);
-		} catch (RuntimeException e) {
-			// if encoding fails (e.g., due to parsing), treat as bad
-			return Double.POSITIVE_INFINITY;
 		}
 	}
 
