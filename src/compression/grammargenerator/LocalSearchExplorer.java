@@ -42,6 +42,7 @@ import static java.lang.System.out;
  */
 public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	private final Random random;
+	private final long seed;
 	private final Dataset objectiveDataset;
 	private final Dataset objectiveDatasetLimited;
 	private final List<List<Terminal<Character>>> parsableDatasetWords;
@@ -50,6 +51,14 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	private final Map<Rule, Integer> ruleToIndex;
 
 	private static final double IMPROVEMENT_EPS = 1e-3; // at least 1/1000
+	private static final String[] RUN_COLORS = {
+			"\u001B[34m", // blue
+			"\u001B[32m", // green
+			"\u001B[36m", // cyan
+			"\u001B[35m", // magenta
+			"\u001B[33m"  // yellow
+	};
+	private static final String ANSI_RESET = "\u001B[0m";
 
 	private LocalSearchExplorer(final int nNonterminals,
 	                            final long seed,
@@ -59,6 +68,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	                            final int objectiveLimit) {
 		super(nNonterminals);
 		this.random = new Random(seed);
+		this.seed = seed;
 		this.objectiveDataset = objectiveDataset;
 		this.withNonCanonicalRules = withNonCanonicalRules;
 		this.parsableDatasetWords = new ArrayList<>(parsableDataset.getSize());
@@ -82,8 +92,8 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	public static void main(String[] args) throws Exception {
 		final int nNonterminals = 3;
 		final int initialRuleCount = 20;               // start reasonably large; hill-climb will remove/swap/add rules
-		final long baseSeed = 42424242L;
-		final int maxSteps = 5;                        // stop if no improving neighbor earlier
+		final long baseSeed = 42;
+		final int maxSteps = 10;                       // stop if no improving neighbor earlier
 		final int maxSwapCandidatesPerStep = 100;      // sample this many random swaps per step
 		final int maxNeighborEvaluationsPerStep = 150;
 		final int maxSeedAttempts = 2000;              // retries to find a parsable seed
@@ -91,6 +101,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		final int objectiveLimit = -1;                 // limit objective dataset to first N RNAs (-1 means use all)
 		final int numRuns = 3;                         // how many independent hill-climb runs
 		final boolean logSteps = true;                 // toggle per-step logging
+		final boolean useAnsiColors = true;            // color run labels in output
 
 		final Dataset objectiveDataset = new CachedDataset(new FolderBasedDataset("small-dataset"));
 		final Dataset parsableDataset = new CachedDataset(new FolderBasedDataset("minimal-parsable"));
@@ -100,15 +111,16 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
             out.println(string);
         }
 
-        int poolSize = 2; // hardcoded for now
+        int poolSize = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
 		ExecutorService executor = Executors.newFixedThreadPool(poolSize);
-		List<Future<SearchState>> futures = new ArrayList<>();
+		List<Future<RunResult>> futures = new ArrayList<>();
 
 		for (int r = 0; r < numRuns; r++) {
 			final int runNumber = r + 1;
 			final long runSeed = baseSeed + r;
-			Callable<SearchState> task = () -> {
-				out.printf("%n===== starting run %d of %d (seed=%d) =====%n", runNumber, numRuns, runSeed);
+			Callable<RunResult> task = () -> {
+				String label = runLabel(runNumber, useAnsiColors);
+				out.printf("%n===== starting %s of %d (seed=%d) =====%n", label, numRuns, runSeed);
 				LocalSearchExplorer explorer = new LocalSearchExplorer(
 						nNonterminals,
 						runSeed,
@@ -124,66 +136,88 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 						maxNeighborEvaluationsPerStep,
 						logSteps,
 						runNumber,
-						numRuns);
+						numRuns,
+						useAnsiColors);
 			};
 			futures.add(executor.submit(task));
 		}
 
-		List<SearchState> runResults = new ArrayList<>();
+		List<RunResult> runResults = new ArrayList<>();
 		for (int i = 0; i < futures.size(); i++) {
 			try {
-				SearchState state = futures.get(i).get();
-				runResults.add(state);
-				out.printf("Run %d completed: size=%d bits/base=%.4f%n", i + 1, state.grammar.size(), state.bitsPerBase);
+				RunResult result = futures.get(i).get();
+				runResults.add(result);
+				RunStats stats = result.stats();
+				out.printf("%s completed: size=%d bits/base=%.4f steps=%d neighbors=%d%n",
+						runLabel(stats.runNumber(), useAnsiColors),
+						stats.bestSize(),
+						stats.bestBitsPerBase(),
+						stats.stepsTaken(),
+						stats.totalNeighborsEvaluated());
 			} catch (ExecutionException e) {
 				out.printf("Run %d failed: %s%n", i + 1, e.getCause().getMessage());
 			}
 		}
 		executor.shutdown();
 
-		SearchState best = runResults.stream()
-				.min(Comparator.comparingDouble(SearchState::bitsPerBase))
+		RunResult best = runResults.stream()
+				.min(Comparator.comparingDouble(r -> r.best().bitsPerBase))
 				.orElse(null);
 
 		out.println("\n=== Run summary ===");
 		for (int i = 0; i < runResults.size(); i++) {
-			SearchState s = runResults.get(i);
-			out.printf("Run %d: size=%d bits/base=%.4f%n", i + 1, s.grammar.size(), s.bitsPerBase);
+			RunResult r = runResults.get(i);
+			RunStats stats = r.stats();
+			out.printf("%s | seed=%d | steps=%d | bits/base=%.4f | size=%d | neighbors=%d%n",
+					runLabel(stats.runNumber(), useAnsiColors),
+					stats.seed(),
+					stats.stepsTaken(),
+					stats.bestBitsPerBase(),
+					stats.bestSize(),
+					stats.totalNeighborsEvaluated());
 		}
 		if (best != null) {
-			out.printf("%nBest overall: size=%d bits/base=%.4f%n", best.grammar.size(), best.bitsPerBase);
+			out.printf("%nBest overall: %s seed=%d size=%d bits/base=%.4f%n",
+					runLabel(best.stats().runNumber(), useAnsiColors),
+					best.stats().seed(),
+					best.best().grammar().size(),
+					best.best().bitsPerBase());
 		}
 	}
 
-	private SearchState runSingleRun(final int initialRuleCount,
-	                                 final int maxSeedAttempts,
-	                                 final int maxSteps,
-	                                 final int maxSwapCandidatesPerStep,
-	                                 final int maxNeighborEvaluationsPerStep,
-	                                 final boolean logSteps,
-	                                 final int runNumber,
-	                                 final int totalRuns) {
+	private RunResult runSingleRun(final int initialRuleCount,
+	                               final int maxSeedAttempts,
+	                               final int maxSteps,
+	                               final int maxSwapCandidatesPerStep,
+	                               final int maxNeighborEvaluationsPerStep,
+	                               final boolean logSteps,
+	                               final int runNumber,
+	                               final int totalRuns,
+	                               final boolean useAnsiColors) {
 		SearchState current = sampleParsableSeed(initialRuleCount, maxSeedAttempts);
-		out.printf("Run %d/%d seed: size=%d bits/base=%.4f%n", runNumber, totalRuns, current.grammar.size(), current.bitsPerBase);
+		out.printf("%s seed: size=%d bits/base=%.4f%n", runLabel(runNumber, useAnsiColors), current.grammar.size(), current.bitsPerBase);
 
+		int stepsTaken = 0;
+		int totalNeighborsEvaluated = 0;
+		String label = runLabel(runNumber, useAnsiColors);
 		for (int step = 0; step < maxSteps; step++) {
+			stepsTaken++;
 			NeighborSearchOutcome outcome = firstImprovingNeighbor(
 					current,
 					maxSwapCandidatesPerStep,
 					maxNeighborEvaluationsPerStep);
-			if (logSteps) {
-				out.printf("run %d ", runNumber);
-			}
+			totalNeighborsEvaluated += outcome.evaluated();
 			if (!outcome.improved()) {
 				if (logSteps) {
-					out.printf("Step %d: size=%d score=%.4f | explored %d neighbors, no improvement%n",
-							step, current.grammar.size(), current.bitsPerBase, outcome.evaluated());
+					out.printf("%s step %d: size=%d score=%.4f | explored %d neighbors, no improvement%n",
+							label, step, current.grammar.size(), current.bitsPerBase, outcome.evaluated());
 				}
 				break;
 			}
 			current = outcome.next();
 			if (logSteps) {
-				out.printf("Step %d: size=%d score=%.4f | explored %d neighbors (improvement at #%d) -> size=%d score=%.4f%n",
+				out.printf("%s step %d: size=%d score=%.4f | explored %d neighbors (improvement at #%d) -> size=%d score=%.4f%n",
+						label,
 						step,
 						outcome.previousGrammarSize(),
 						outcome.previousBitsPerBase(),
@@ -194,7 +228,14 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			}
 		}
 
-		return current;
+		RunStats stats = new RunStats(
+				runNumber,
+				seed,
+				stepsTaken,
+				totalNeighborsEvaluated,
+				current.grammar.size(),
+				current.bitsPerBase);
+		return new RunResult(current, stats);
 	}
 
 	private SearchState sampleParsableSeed(final int nRules, final int maxAttempts) {
@@ -348,9 +389,20 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			public Iterator<RNAWithStructure> iterator() {
 				return rnas.iterator();
 			}
-		}
+	}
 
 	private record SearchState(boolean[] ruleMask, SecondaryStructureGrammar grammar, double bitsPerBase) {
+	}
+
+	private record RunStats(int runNumber,
+	                        long seed,
+	                        int stepsTaken,
+	                        int totalNeighborsEvaluated,
+	                        int bestSize,
+	                        double bestBitsPerBase) {
+	}
+
+	private record RunResult(SearchState best, RunStats stats) {
 	}
 
 	private record NeighborSearchOutcome(SearchState next,
@@ -359,6 +411,17 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	                                     int previousGrammarSize,
 	                                     double previousBitsPerBase,
 	                                     boolean improved) {
+	}
+
+	private static String colorForRun(int runNumber, boolean enableAnsi) {
+		if (!enableAnsi) return "";
+		return RUN_COLORS[(runNumber - 1) % RUN_COLORS.length];
+	}
+
+	private static String runLabel(int runNumber, boolean enableAnsi) {
+		String base = "Run " + runNumber;
+		if (!enableAnsi) return base;
+		return colorForRun(runNumber, true) + base + ANSI_RESET;
 	}
 
 	record QuickResult(double bitsPerBase, int grammarSize) {
