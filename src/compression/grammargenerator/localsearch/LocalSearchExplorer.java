@@ -199,12 +199,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		int totalNeighborsEvaluated = 0;
 		for (int step = 0; step < maxSteps; step++) {
 			stepsTaken++;
-			NeighborSearchOutcome outcome = searchNeighbors(
-					current,
-					maxSwapCandidatesPerStep,
-					maxNeighborEvaluationsPerStep,
-					maxCandidatesPerStep,
-					searchStrategy);
+			NeighborSearchOutcome outcome = neighborSearcher.search(current, maxSwapCandidatesPerStep, maxNeighborEvaluationsPerStep, maxCandidatesPerStep, searchStrategy);
 			totalNeighborsEvaluated += outcome.getEvaluated();
 			if (!outcome.isImproved()) {
 				Logging.printStepNoImprovement(runNumber, step, current.getGrammar().size(), current.getBitsPerBase(), outcome.getEvaluated());
@@ -246,14 +241,6 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			return new SearchState(mask, grammar, score);
 		}
 		throw new IllegalStateException("Could not find a parsable seed grammar after " + maxAttempts + " attempts");
-	}
-
-	private NeighborSearchOutcome searchNeighbors(final SearchState current,
-	                                              final int maxSwapCandidates,
-	                                              final int maxNeighborEvaluations,
-	                                              final int maxCandidatesPerStep,
-	                                              final SearchStrategy strategy) {
-		return neighborSearcher.search(current, maxSwapCandidates, maxNeighborEvaluations, maxCandidatesPerStep, strategy);
 	}
 
 	private boolean[] toMask(final SecondaryStructureGrammar grammar) {
