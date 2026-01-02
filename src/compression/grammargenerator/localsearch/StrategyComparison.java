@@ -1,9 +1,8 @@
 package compression.grammargenerator.localsearch;
 
+import compression.grammargenerator.localsearch.dataclasses.Config;
 import compression.grammargenerator.localsearch.dataclasses.RunResult;
 import compression.grammargenerator.localsearch.dataclasses.SearchStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -11,7 +10,6 @@ import java.util.List;
  * Runs local search with both neighbor selection strategies and prints a comparison.
  */
 public final class StrategyComparison {
-	private static final Logger log = LoggerFactory.getLogger("localsearch.StrategyComparison");
 	private StrategyComparison() {
 		// utility
 	}
@@ -21,44 +19,45 @@ public final class StrategyComparison {
 		Config firstImprovementConfig = baseConfig.withStrategy(SearchStrategy.FIRST_IMPROVEMENT);
 		Config bestImprovementConfig = baseConfig.withStrategy(SearchStrategy.BEST_IMPROVEMENT);
 
-		log.info("=== Running first-improvement local search ===");
+		Logging.printLine("=== Running first-improvement local search ===");
 		List<RunResult> firstImprovementResults = LocalSearchExplorer.runWithConfig(firstImprovementConfig);
 
-		log.info("=== Running best-improvement local search ===");
+		Logging.printLine("=== Running best-improvement local search ===");
 		List<RunResult> bestImprovementResults = LocalSearchExplorer.runWithConfig(bestImprovementConfig);
 
 		RunResult bestFirst = LocalSearchExplorer.bestResult(firstImprovementResults);
 		RunResult bestBest = LocalSearchExplorer.bestResult(bestImprovementResults);
 
-		log.info("=== Strategy comparison ===");
+		Logging.printLine("=== Strategy comparison ===");
 		if (bestFirst != null) {
-			log.info("First improvement best: bits/base={} size={} seed={} run={}",
-					format(bestFirst.best().getBitsPerBase()),
-					bestFirst.best().getGrammar().size(),
-					bestFirst.stats().seed(),
-					bestFirst.stats().runNumber());
+			Logging.printLine(String.format(
+					"First improvement best: bits/base=%.4f size=%d seed=%d run=%d",
+					bestFirst.getBest().getBitsPerBase(),
+					bestFirst.getBest().getGrammar().size(),
+					bestFirst.getStats().getSeed(),
+					bestFirst.getStats().getRunNumber()));
 		} else {
-			log.info("First improvement produced no successful runs.");
+			Logging.printLine("First improvement produced no successful runs.");
 		}
 
 		if (bestBest != null) {
-			log.info("Best improvement best: bits/base={} size={} seed={} run={}",
-					format(bestBest.best().getBitsPerBase()),
-					bestBest.best().getGrammar().size(),
-					bestBest.stats().seed(),
-					bestBest.stats().runNumber());
+			Logging.printLine(String.format(
+					"Best improvement best: bits/base=%.4f size=%d seed=%d run=%d",
+					bestBest.getBest().getBitsPerBase(),
+					bestBest.getBest().getGrammar().size(),
+					bestBest.getStats().getSeed(),
+					bestBest.getStats().getRunNumber()));
 		} else {
-			log.info("Best improvement produced no successful runs.");
+			Logging.printLine("Best improvement produced no successful runs.");
 		}
 
 		if (bestFirst != null && bestBest != null) {
-			double delta = bestFirst.best().getBitsPerBase() - bestBest.best().getBitsPerBase();
+			double delta = bestFirst.getBest().getBitsPerBase() - bestBest.getBest().getBitsPerBase();
 			String winner = delta > 0 ? "Best-improvement wins" : delta < 0 ? "First-improvement wins" : "Tie";
-			log.info("Comparison: {} (delta={} bits/base)", winner, format(Math.abs(delta)));
+			Logging.printLine(String.format(
+					"Comparison: %s (delta=%.4f bits/base)",
+					winner,
+					Math.abs(delta)));
 		}
-	}
-
-	private static String format(double value) {
-		return String.format("%.4f", value);
 	}
 }

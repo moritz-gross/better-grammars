@@ -1,7 +1,12 @@
 package compression.grammargenerator.localsearch.dataclasses;
 
+import lombok.Value;
+
 /**
  * Best state and stats for a completed run.
  */
-public record RunResult(SearchState best, RunStats stats) {
+@Value
+public class RunResult {
+	SearchState best;
+	RunStats stats;
 }

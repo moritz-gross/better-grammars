@@ -1,6 +1,7 @@
 package compression.grammargenerator.localsearch;
 
 import compression.data.Dataset;
+import compression.grammargenerator.localsearch.dataclasses.Config;
 import compression.grammargenerator.localsearch.dataclasses.RunResult;
 import compression.grammargenerator.localsearch.dataclasses.RunStats;
 import org.slf4j.Logger;
@@ -32,6 +33,10 @@ public final class Logging {
 		log.info("{} seed: size={} bits/base={}", runLabel(runNumber), size, formatScore(bitsPerBase));
 	}
 
+	public static void printSeedCandidate(int attempt, int size, double bitsPerBase) {
+		log.info("Seed candidate {}: size={} bits/base={}", attempt, size, formatScore(bitsPerBase));
+	}
+
 	public static void printStepNoImprovement(int runNumber, int step, int size, double score, int explored) {
 		log.info("{} step {}: size={} score={} | explored {} neighbors, no improvement",
 				runLabel(runNumber), step, size, formatScore(score), explored);
@@ -58,29 +63,41 @@ public final class Logging {
 
 	public static void printRunCompleted(RunStats stats) {
 		log.info("{} completed: size={} bits/base={} steps={} neighbors={}",
-				runLabel(stats.runNumber()),
-				stats.bestSize(),
-				formatScore(stats.bestBitsPerBase()),
-				stats.stepsTaken(),
-				stats.totalNeighborsEvaluated());
+				runLabel(stats.getRunNumber()),
+				stats.getBestSize(),
+				formatScore(stats.getBestBitsPerBase()),
+				stats.getStepsTaken(),
+				stats.getTotalNeighborsEvaluated());
+	}
+
+	public static void printRunFailure(int runNumber, Throwable cause) {
+		log.warn("Run {} failed: {}", runNumber, cause == null ? "unknown error" : cause.getMessage());
+	}
+
+	public static void printRunSummaryHeader() {
+		log.info("=== Run summary ===");
+	}
+
+	public static void printLine(String message) {
+		log.info(message);
 	}
 
 	public static void printSummaryLine(RunStats stats) {
 		log.info("{} | seed={} | steps={} | bits/base={} | size={} | neighbors={}",
-				runLabel(stats.runNumber()),
-				stats.seed(),
-				stats.stepsTaken(),
-				formatScore(stats.bestBitsPerBase()),
-				stats.bestSize(),
-				stats.totalNeighborsEvaluated());
+				runLabel(stats.getRunNumber()),
+				stats.getSeed(),
+				stats.getStepsTaken(),
+				formatScore(stats.getBestBitsPerBase()),
+				stats.getBestSize(),
+				stats.getTotalNeighborsEvaluated());
 	}
 
 	public static void printBestOverall(RunResult best) {
 		log.info("Best overall: {} seed={} size={} bits/base={}",
-				runLabel(best.stats().runNumber()),
-				best.stats().seed(),
-				best.best().getGrammar().size(),
-				formatScore(best.best().getBitsPerBase()));
+				runLabel(best.getStats().getRunNumber()),
+				best.getStats().getSeed(),
+				best.getBest().getGrammar().size(),
+				formatScore(best.getBest().getBitsPerBase()));
 	}
 
 	public static void printConfig(Config config, Dataset objectiveDataset, Dataset parsableDataset) {

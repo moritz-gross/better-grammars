@@ -1,38 +1,22 @@
 package compression.grammargenerator.localsearch;
 
 import compression.RuleProbType;
-import compression.data.CachedDataset;
 import compression.data.Dataset;
-import compression.data.FolderBasedDataset;
-import compression.grammar.RNAWithStructure;
-import compression.grammar.Rule;
 import compression.grammar.SecondaryStructureGrammar;
 import compression.grammar.Terminal;
 import compression.grammargenerator.AbstractGrammarExplorer;
 import compression.grammargenerator.RandomGrammarExplorer;
+import compression.grammargenerator.localsearch.dataclasses.Config;
 import compression.grammargenerator.localsearch.dataclasses.NeighborSearchOutcome;
 import compression.grammargenerator.localsearch.dataclasses.RunResult;
 import compression.grammargenerator.localsearch.dataclasses.RunStats;
 import compression.grammargenerator.localsearch.dataclasses.SearchState;
 import compression.grammargenerator.localsearch.dataclasses.SearchStrategy;
 import compression.parser.SRFParser;
-import com.google.common.collect.ImmutableList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  * Simple hill-climbing local search over grammars:
@@ -41,19 +25,17 @@ import java.util.concurrent.Future;
  * first-improvement or best-improvement until no improving move is found.
  */
 public class LocalSearchExplorer extends AbstractGrammarExplorer {
-	private static final Logger log = LoggerFactory.getLogger("localsearch.LocalSearchExplorer");
 	private final Random random;
 	private final long seed;
-	private final Dataset objectiveDataset;
 	private final Dataset objectiveDatasetLimited;
 	private final List<List<Terminal<Character>>> parsableDatasetWords;
 	private final List<List<Terminal<Character>>> objectiveDatasetWords;
     private final boolean withNonCanonicalRules;
 	private final SearchStrategy searchStrategy;
-	private final Map<Rule, Integer> ruleToIndex;
+	private final RuleMaskCodec ruleMaskCodec;
 	private final NeighborSearcher neighborSearcher;
 
-	private LocalSearchExplorer(final int nNonterminals,
+	LocalSearchExplorer(final int nNonterminals,
 	                            final long seed,
 	                            final Dataset objectiveDataset,
 	                            final Dataset parsableDataset,
@@ -63,55 +45,20 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		super(nNonterminals);
 		this.random = new Random(seed);
 		this.seed = seed;
-		this.objectiveDataset = objectiveDataset;
 		this.withNonCanonicalRules = withNonCanonicalRules;
 		this.searchStrategy = searchStrategy;
-		ImmutableList.Builder<List<Terminal<Character>>> parsableWordsBuilder = ImmutableList.builder();
-		for (RNAWithStructure rna : parsableDataset) {
-			parsableWordsBuilder.add(rna.secondaryStructureAsTerminals());
-		}
-		this.parsableDatasetWords = parsableWordsBuilder.build();
-
-		List<RNAWithStructure> rnas = new ArrayList<>(objectiveDataset.getSize());
-		for (RNAWithStructure rna : objectiveDataset) {
-			rnas.add(rna);
-		}
-		if (objectiveLimit > 0 && objectiveLimit < rnas.size()) {
-			rnas = rnas.subList(0, objectiveLimit);
-		}
-        List<RNAWithStructure> objectiveRnasLimited = Collections.unmodifiableList(rnas);
-		this.objectiveDatasetLimited = new Dataset() {
-			@Override
-			public int getSize() {
-				return objectiveRnasLimited.size();
-			}
-
-			@Override
-			public String name() {
-				return objectiveDataset.name() + "-limited";
-			}
-
-			@Override
-			public Iterator<RNAWithStructure> iterator() {
-				return objectiveRnasLimited.iterator();
-			}
-		};
-		ImmutableList.Builder<List<Terminal<Character>>> objectiveWordsBuilder = ImmutableList.builder();
-		for (RNAWithStructure rna : objectiveRnasLimited) {
-			objectiveWordsBuilder.add(rna.secondaryStructureAsTerminals());
-		}
-		this.objectiveDatasetWords = objectiveWordsBuilder.build();
-		this.ruleToIndex = new HashMap<>(allPossibleRules.length);
-		for (int i = 0; i < allPossibleRules.length; i++) {
-			ruleToIndex.put(allPossibleRules[i], i);
-		}
+		DatasetBundle bundle = DatasetBundle.from(objectiveDataset, parsableDataset, objectiveLimit);
+		this.parsableDatasetWords = bundle.getParsableDatasetWords();
+		this.objectiveDatasetWords = bundle.getObjectiveDatasetWords();
+		this.objectiveDatasetLimited = bundle.getObjectiveDatasetLimited();
+		this.ruleMaskCodec = new RuleMaskCodec(allPossibleRules, nonTerminals[nNonterminals - 1]);
+		ScoreEvaluator scoreEvaluator = grammar ->
+				getBitsPerBase(objectiveDatasetLimited, RuleProbType.ADAPTIVE, grammar, withNonCanonicalRules);
 		this.neighborSearcher = new NeighborSearcher(
-				allPossibleRules,
-				nonTerminals[nNonterminals - 1],
+				ruleMaskCodec,
 				parsableDatasetWords,
 				objectiveDatasetWords,
-				objectiveDatasetLimited,
-				withNonCanonicalRules,
+				scoreEvaluator,
 				random);
 	}
 
@@ -120,72 +67,16 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	}
 
 	public static List<RunResult> runWithConfig(final Config config) throws Exception {
-		final Dataset objectiveDataset = new CachedDataset(new FolderBasedDataset(config.objectiveDatasetName()));
-		final Dataset parsableDataset = new CachedDataset(new FolderBasedDataset(config.parsableDatasetName()));
-
-		Logging.printConfig(config, objectiveDataset, parsableDataset);
-
-		ExecutorService executor = Executors.newFixedThreadPool(config.poolSize());
-		List<Future<RunResult>> futures = new ArrayList<>();
-
-		for (int r = 0; r < config.numRuns(); r++) {
-			final int runNumber = r + 1;
-			final long runSeed = config.baseSeed() + r;
-			Callable<RunResult> task = () -> {
-				Logging.printRunStart(runNumber, config.numRuns(), runSeed);
-				LocalSearchExplorer explorer = new LocalSearchExplorer(
-						config.nNonterminals(),
-						runSeed,
-						objectiveDataset,
-						parsableDataset,
-						config.withNonCanonicalRules(),
-						config.objectiveLimit(),
-						config.searchStrategy());
-				return explorer.runSingleRun(
-						config.initialRuleCount(),
-						config.maxSeedAttempts(),
-						config.maxSteps(),
-						config.maxSwapCandidatesPerStep(),
-						config.maxNeighborEvaluationsPerStep(),
-						config.maxCandidatesPerStep(),
-						runNumber);
-			};
-			futures.add(executor.submit(task));
-		}
-
-		List<RunResult> runResults = new ArrayList<>();
-		for (int i = 0; i < futures.size(); i++) {
-			try {
-				RunResult result = futures.get(i).get();
-				runResults.add(result);
-				RunStats stats = result.stats();
-				Logging.printRunCompleted(stats);
-			} catch (ExecutionException e) {
-				log.warn("Run {} failed: {}", i + 1, e.getCause().getMessage());
-			}
-		}
-		executor.shutdown();
-
-		RunResult best = bestResult(runResults);
-
-		log.info("=== Run summary ===");
-        for (RunResult r : runResults) {
-            RunStats stats = r.stats();
-            Logging.printSummaryLine(stats);
-        }
-		if (best != null) {
-			Logging.printBestOverall(best);
-		}
-		return runResults;
+		return LocalSearchRunner.run(config);
 	}
 
 	public static RunResult bestResult(List<RunResult> runResults) {
 		return runResults.stream()
-				.min(Comparator.comparingDouble(r -> r.best().getBitsPerBase()))
+				.min(Comparator.comparingDouble(r -> r.getBest().getBitsPerBase()))
 				.orElse(null);
 	}
 
-	private RunResult runSingleRun(final int initialRuleCount,
+	RunResult runSingleRun(final int initialRuleCount,
 	                               final int maxSeedAttempts,
 	                               final int maxSteps,
 	                               final int maxSwapCandidatesPerStep,
@@ -232,34 +123,15 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
 			SecondaryStructureGrammar grammar = generator.randomGrammar(random, nRules);
 			SRFParser<Character> parser = new SRFParser<>(grammar);
-			if (!passesDataset(parser, parsableDatasetWords)) continue;
-			if (!passesDataset(parser, objectiveDatasetWords)) continue;
-			boolean[] mask = toMask(grammar);
+		if (!ParsabilityChecker.passesDataset(parser, parsableDatasetWords)) continue;
+		if (!ParsabilityChecker.passesDataset(parser, objectiveDatasetWords)) continue;
+			boolean[] mask = ruleMaskCodec.toMask(grammar);
 			double score = getBitsPerBase(objectiveDatasetLimited, RuleProbType.ADAPTIVE, grammar, withNonCanonicalRules);
 			if (!Double.isFinite(score)) continue;
-			log.info("Seed candidate {}: size={} bits/base={}", attempt, grammar.size(), String.format("%.4f", score));
+			Logging.printSeedCandidate(attempt, grammar.size(), score);
 			return new SearchState(mask, grammar, score);
 		}
 		throw new IllegalStateException("Could not find a parsable seed grammar after " + maxAttempts + " attempts");
 	}
 
-	private boolean[] toMask(final SecondaryStructureGrammar grammar) {
-		boolean[] mask = new boolean[allPossibleRules.length];
-		for (Rule rule : grammar.getAllRules()) {
-			Integer idx = ruleToIndex.get(rule);
-			if (idx != null) {
-				mask[idx] = true;
-			}
-		}
-		return mask;
-	}
-
-	private boolean passesDataset(final SRFParser<Character> ssParser, final List<List<Terminal<Character>>> words) {
-		for (List<Terminal<Character>> word : words) {
-			if (!ssParser.parsable(word)) {
-				return false;
-			}
-		}
-		return true;
-	}
 }

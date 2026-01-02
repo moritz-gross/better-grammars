@@ -1,6 +1,5 @@
-package compression.grammargenerator.localsearch;
+package compression.grammargenerator.localsearch.dataclasses;
 
-import compression.grammargenerator.localsearch.dataclasses.SearchStrategy;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Value;

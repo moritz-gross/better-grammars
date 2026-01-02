@@ -1,12 +1,16 @@
 package compression.grammargenerator.localsearch.dataclasses;
 
+import lombok.Value;
+
 /**
  * Summary statistics for a single run.
  */
-public record RunStats(int runNumber,
-                       long seed,
-                       int stepsTaken,
-                       int totalNeighborsEvaluated,
-                       int bestSize,
-                       double bestBitsPerBase) {
+@Value
+public class RunStats {
+	int runNumber;
+	long seed;
+	int stepsTaken;
+	int totalNeighborsEvaluated;
+	int bestSize;
+	double bestBitsPerBase;
 }

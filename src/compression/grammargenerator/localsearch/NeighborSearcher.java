@@ -1,16 +1,11 @@
 package compression.grammargenerator.localsearch;
 
-import compression.RuleProbType;
-import compression.data.Dataset;
-import compression.grammar.NonTerminal;
-import compression.grammar.Rule;
 import compression.grammar.SecondaryStructureGrammar;
 import compression.grammar.Terminal;
 import compression.grammargenerator.localsearch.dataclasses.NeighborSearchOutcome;
 import compression.grammargenerator.localsearch.dataclasses.SearchState;
 import compression.grammargenerator.localsearch.dataclasses.SearchStrategy;
 import compression.parser.SRFParser;
-import compression.util.MyMultimap;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -28,12 +23,10 @@ import java.util.Set;
 final class NeighborSearcher {
 	private static final double IMPROVEMENT_EPS = 1e-3; // at least 1/1000
 
-	private final Rule[] allPossibleRules;
-	private final NonTerminal startSymbol;
+	private final RuleMaskCodec ruleMaskCodec;
 	private final List<List<Terminal<Character>>> parsableDatasetWords;
 	private final List<List<Terminal<Character>>> objectiveDatasetWords;
-	private final Dataset objectiveDatasetLimited;
-	private final boolean withNonCanonicalRules;
+	private final ScoreEvaluator scoreEvaluator;
 	private final Random random;
 
 	NeighborSearchOutcome search(final SearchState current,
@@ -53,12 +46,12 @@ final class NeighborSearcher {
 			if (evaluated >= maxNeighborEvaluations) break;
 			considered++;
 			boolean[] candidateMask = applyMove(current.getRuleMask(), move);
-			SecondaryStructureGrammar candidateGrammar = buildGrammarIfValid(candidateMask);
+			SecondaryStructureGrammar candidateGrammar = ruleMaskCodec.buildGrammarIfValid(candidateMask);
 			if (candidateGrammar == null) continue;
 			SRFParser<Character> parser = new SRFParser<>(candidateGrammar);
-			if (!passesDataset(parser, parsableDatasetWords)) continue;
-			if (!passesDataset(parser, objectiveDatasetWords)) continue;
-			double score = LocalSearchExplorer.getBitsPerBase(objectiveDatasetLimited, RuleProbType.ADAPTIVE, candidateGrammar, withNonCanonicalRules);
+			if (!ParsabilityChecker.passesDataset(parser, parsableDatasetWords)) continue;
+			if (!ParsabilityChecker.passesDataset(parser, objectiveDatasetWords)) continue;
+			double score = scoreEvaluator.score(candidateGrammar);
 			evaluated++;
 			neighborIndex++;
 			if (score + IMPROVEMENT_EPS < current.getBitsPerBase()) {
@@ -136,31 +129,6 @@ final class NeighborSearcher {
 				break;
 		}
 		return next;
-	}
-
-	private SecondaryStructureGrammar buildGrammarIfValid(final boolean[] mask) {
-		MyMultimap<NonTerminal, Rule> rules = new MyMultimap<>();
-		for (int i = 0; i < mask.length; i++) {
-			if (mask[i]) {
-				Rule rule = allPossibleRules[i];
-				rules.put(rule.left, rule);
-			}
-		}
-		try {
-			String name = "LocalSearch_" + Arrays.toString(mask);
-			return new SecondaryStructureGrammar(name, startSymbol, rules);
-		} catch (IllegalArgumentException e) {
-			return null; // invalid grammar
-		}
-	}
-
-	private boolean passesDataset(final SRFParser<Character> ssParser, final List<List<Terminal<Character>>> words) {
-		for (List<Terminal<Character>> word : words) {
-			if (!ssParser.parsable(word)) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	private record Move(Type type, int source, int target) {
