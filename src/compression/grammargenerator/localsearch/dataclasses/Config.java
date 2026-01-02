@@ -1,58 +1,45 @@
 package compression.grammargenerator.localsearch.dataclasses;
 
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Value;
+import lombok.experimental.Accessors;
+
 /**
  * Configuration parameters for local search runs.
  */
-public record Config(int nNonterminals,
-                     int initialRuleCount,
-                     long baseSeed,
-                     int maxSteps,
-                     int maxSwapCandidatesPerStep,
-                     int maxNeighborEvaluationsPerStep,
-                     int maxCandidatesPerStep,
-                     int maxSeedAttempts,
-                     boolean withNonCanonicalRules,
-                     int objectiveLimit,
-                     int numRuns,
-                     SearchStrategy searchStrategy,
-                     String objectiveDatasetName,
-                     String parsableDatasetName,
-                     int poolSize) {
+@Value
+@Builder(toBuilder = true)
+@Accessors(fluent = true)
+public class Config {
+	@Default int nNonterminals = 3;
+	@Default int initialRuleCount = 20;
+	@Default long baseSeed = 42;
+	@Default int maxSteps = 25;
+	@Default int maxSwapCandidatesPerStep = 100;
+	@Default int maxNeighborEvaluationsPerStep = 150;
+	/**
+	 * Maximum number of neighbor candidates to consider per step; use -1 to explore all.
+	 */
+	@Default int maxCandidatesPerStep = 100;
+	@Default int maxSeedAttempts = 2000;
+	@Default boolean withNonCanonicalRules = false;
+	@Default int objectiveLimit = -1;
+	@Default int numRuns = 3;
+	@Default SearchStrategy searchStrategy = SearchStrategy.FIRST_IMPROVEMENT;
+	@Default String objectiveDatasetName = "small-dataset";
+	@Default String parsableDatasetName = "minimal-parsable";
+	@Default int poolSize = 3;
+
 	public static Config defaults() {
-		return new Config(
-				3,  // nNonterminals
-				20,  // initialRuleCount
-				42,  // baseSeed
-				25,  // maxSteps
-				100,  // maxSwapCandidatesPerStep
-				150,  // maxNeighborEvaluationsPerStep
-				100,  // maxCandidatesPerStep
-				2000,  // maxSeedAttempts
-				false,  // withNonCanonicalRules
-				-1,  // objectiveLimit
-				3,  // numRuns
-				SearchStrategy.FIRST_IMPROVEMENT,
-				"small-dataset",
-				"minimal-parsable",
-				3);
+		return Config.builder().build();
 	}
 
 	public Config withStrategy(SearchStrategy strategy) {
-		return new Config(
-				nNonterminals,
-				initialRuleCount,
-				baseSeed,
-				maxSteps,
-				maxSwapCandidatesPerStep,
-				maxNeighborEvaluationsPerStep,
-				maxCandidatesPerStep,
-				maxSeedAttempts,
-				withNonCanonicalRules,
-				objectiveLimit,
-				numRuns,
-				strategy,
-				objectiveDatasetName,
-				parsableDatasetName,
-				poolSize);
+		return toBuilder().searchStrategy(strategy).build();
+	}
+
+	public Config withMaxCandidatesPerStep(int value) {
+		return toBuilder().maxCandidatesPerStep(value).build();
 	}
 }

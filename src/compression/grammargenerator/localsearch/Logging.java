@@ -4,13 +4,14 @@ import compression.data.Dataset;
 import compression.grammargenerator.localsearch.dataclasses.Config;
 import compression.grammargenerator.localsearch.dataclasses.RunResult;
 import compression.grammargenerator.localsearch.dataclasses.RunStats;
-
-import static java.lang.System.out;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper utilities for formatting log output for local search runs.
  */
 public final class Logging {
+	private static final Logger log = LoggerFactory.getLogger("localsearch.Logging");
 	private static final String[] RUN_COLORS = {
 			"\u001B[34m", // blue
 			"\u001B[32m", // green
@@ -25,16 +26,16 @@ public final class Logging {
 	}
 
 	public static void printRunStart(int runNumber, int totalRuns, long seed) {
-		out.printf("%n===== starting %s of %d (seed=%d) =====%n", runLabel(runNumber), totalRuns, seed);
+		log.info("===== starting {} of {} (seed={}) =====", runLabel(runNumber), totalRuns, seed);
 	}
 
 	public static void printSeed(int runNumber, int size, double bitsPerBase) {
-		out.printf("%s seed: size=%d bits/base=%.4f%n", runLabel(runNumber), size, bitsPerBase);
+		log.info("{} seed: size={} bits/base={}", runLabel(runNumber), size, formatScore(bitsPerBase));
 	}
 
 	public static void printStepNoImprovement(int runNumber, int step, int size, double score, int explored) {
-		out.printf("%s step %d: size=%d score=%.4f | explored %d neighbors, no improvement%n",
-				runLabel(runNumber), step, size, score, explored);
+		log.info("{} step {}: size={} score={} | explored {} neighbors, no improvement",
+				runLabel(runNumber), step, size, formatScore(score), explored);
 	}
 
 	public static void printStepImprovement(int runNumber,
@@ -45,61 +46,61 @@ public final class Logging {
 	                                        int improvementIndex,
 	                                        int newSize,
 	                                        double newScore) {
-		out.printf("%s step %d: size=%d score=%.4f | explored %d neighbors (improvement at #%d) -> size=%d score=%.4f%n",
+		log.info("{} step {}: size={} score={} | explored {} neighbors (improvement at #{}) -> size={} score={}",
 				runLabel(runNumber),
 				step,
 				previousSize,
-				previousScore,
+				formatScore(previousScore),
 				explored,
 				improvementIndex,
 				newSize,
-				newScore);
+				formatScore(newScore));
 	}
 
-public static void printRunCompleted(RunStats stats) {
-	out.printf("%s completed: size=%d bits/base=%.4f steps=%d neighbors=%d%n",
-			runLabel(stats.runNumber()),
-			stats.bestSize(),
-			stats.bestBitsPerBase(),
-			stats.stepsTaken(),
-			stats.totalNeighborsEvaluated());
-}
+	public static void printRunCompleted(RunStats stats) {
+		log.info("{} completed: size={} bits/base={} steps={} neighbors={}",
+				runLabel(stats.runNumber()),
+				stats.bestSize(),
+				formatScore(stats.bestBitsPerBase()),
+				stats.stepsTaken(),
+				stats.totalNeighborsEvaluated());
+	}
 
 	public static void printSummaryLine(RunStats stats) {
-		out.printf("%s | seed=%d | steps=%d | bits/base=%.4f | size=%d | neighbors=%d%n",
+		log.info("{} | seed={} | steps={} | bits/base={} | size={} | neighbors={}",
 				runLabel(stats.runNumber()),
 				stats.seed(),
 				stats.stepsTaken(),
-				stats.bestBitsPerBase(),
+				formatScore(stats.bestBitsPerBase()),
 				stats.bestSize(),
 				stats.totalNeighborsEvaluated());
 	}
 
 	public static void printBestOverall(RunResult best) {
-		out.printf("%nBest overall: %s seed=%d size=%d bits/base=%.4f%n",
+		log.info("Best overall: {} seed={} size={} bits/base={}",
 				runLabel(best.stats().runNumber()),
 				best.stats().seed(),
 				best.best().grammar().size(),
-				best.best().bitsPerBase());
+				formatScore(best.best().bitsPerBase()));
 	}
 
 	public static void printConfig(Config config, Dataset objectiveDataset, Dataset parsableDataset) {
-		out.println("=== Local search configuration ===");
-		out.println("nNonterminals = " + config.nNonterminals());
-		out.println("initialRuleCount = " + config.initialRuleCount());
-		out.println("baseSeed = " + config.baseSeed());
-		out.println("objectiveDataset = " + objectiveDataset);
-		out.println("objectiveLimit = " + config.objectiveLimit());
-		out.println("parsableDataset = " + parsableDataset);
-		out.println("withNonCanonicalRules = " + config.withNonCanonicalRules());
-		out.println("maxSteps = " + config.maxSteps());
-		out.println("maxSwapCandidatesPerStep = " + config.maxSwapCandidatesPerStep());
-		out.println("maxNeighborEvaluationsPerStep = " + config.maxNeighborEvaluationsPerStep());
-		out.println("maxCandidatesPerStep = " + config.maxCandidatesPerStep());
-		out.println("maxSeedAttempts = " + config.maxSeedAttempts());
-		out.println("numRuns = " + config.numRuns());
-		out.println("poolSize = " + config.poolSize());
-		out.println("searchStrategy = " + config.searchStrategy());
+		log.info("=== Local search configuration ===");
+		log.info("nNonterminals = {}", config.nNonterminals());
+		log.info("initialRuleCount = {}", config.initialRuleCount());
+		log.info("baseSeed = {}", config.baseSeed());
+		log.info("objectiveDataset = {}", objectiveDataset);
+		log.info("objectiveLimit = {}", config.objectiveLimit());
+		log.info("parsableDataset = {}", parsableDataset);
+		log.info("withNonCanonicalRules = {}", config.withNonCanonicalRules());
+		log.info("maxSteps = {}", config.maxSteps());
+		log.info("maxSwapCandidatesPerStep = {}", config.maxSwapCandidatesPerStep());
+		log.info("maxNeighborEvaluationsPerStep = {}", config.maxNeighborEvaluationsPerStep());
+		log.info("maxCandidatesPerStep = {}", config.maxCandidatesPerStep());
+		log.info("maxSeedAttempts = {}", config.maxSeedAttempts());
+		log.info("numRuns = {}", config.numRuns());
+		log.info("poolSize = {}", config.poolSize());
+		log.info("searchStrategy = {}", config.searchStrategy());
 	}
 
 	public static String runLabel(int runNumber) {
@@ -109,5 +110,9 @@ public static void printRunCompleted(RunStats stats) {
 
 	private static String colorForRun(int runNumber) {
 		return RUN_COLORS[(runNumber - 1) % RUN_COLORS.length];
+	}
+
+	private static String formatScore(double score) {
+		return String.format("%.4f", score);
 	}
 }

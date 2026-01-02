@@ -19,6 +19,9 @@ import compression.grammargenerator.localsearch.dataclasses.SearchState;
 import compression.grammargenerator.localsearch.dataclasses.SearchStrategy;
 import compression.parser.SRFParser;
 import compression.util.MyMultimap;
+import com.google.common.collect.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,8 +40,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static java.lang.System.out;
-
 /**
  * Simple hill-climbing local search over grammars:
  * start from a (random) parsable grammar, evaluate bits/base on the objective dataset,
@@ -46,6 +47,7 @@ import static java.lang.System.out;
  * first-improvement or best-improvement until no improving move is found.
  */
 public class LocalSearchExplorer extends AbstractGrammarExplorer {
+	private static final Logger log = LoggerFactory.getLogger("localsearch.LocalSearchExplorer");
 	private final Random random;
 	private final long seed;
 	private final Dataset objectiveDataset;
@@ -70,14 +72,19 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		this.objectiveDataset = objectiveDataset;
 		this.withNonCanonicalRules = withNonCanonicalRules;
 		this.searchStrategy = searchStrategy;
-		this.parsableDatasetWords = new ArrayList<>(parsableDataset.getSize());
-		for (RNAWithStructure rna : parsableDataset)
-			parsableDatasetWords.add(rna.secondaryStructureAsTerminals());
+		ImmutableList.Builder<List<Terminal<Character>>> parsableWordsBuilder = ImmutableList.builder();
+		for (RNAWithStructure rna : parsableDataset) {
+			parsableWordsBuilder.add(rna.secondaryStructureAsTerminals());
+		}
+		this.parsableDatasetWords = parsableWordsBuilder.build();
+
 		List<RNAWithStructure> rnas = new ArrayList<>(objectiveDataset.getSize());
-		for (RNAWithStructure rna : objectiveDataset)
+		for (RNAWithStructure rna : objectiveDataset) {
 			rnas.add(rna);
-		if (objectiveLimit > 0 && objectiveLimit < rnas.size())
+		}
+		if (objectiveLimit > 0 && objectiveLimit < rnas.size()) {
 			rnas = rnas.subList(0, objectiveLimit);
+		}
         List<RNAWithStructure> objectiveRnasLimited = Collections.unmodifiableList(rnas);
 		this.objectiveDatasetLimited = new Dataset() {
 			@Override
@@ -95,9 +102,11 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 				return objectiveRnasLimited.iterator();
 			}
 		};
-		this.objectiveDatasetWords = new ArrayList<>(objectiveRnasLimited.size());
-		for (RNAWithStructure rna : objectiveRnasLimited)
-			objectiveDatasetWords.add(rna.secondaryStructureAsTerminals());
+		ImmutableList.Builder<List<Terminal<Character>>> objectiveWordsBuilder = ImmutableList.builder();
+		for (RNAWithStructure rna : objectiveRnasLimited) {
+			objectiveWordsBuilder.add(rna.secondaryStructureAsTerminals());
+		}
+		this.objectiveDatasetWords = objectiveWordsBuilder.build();
 		this.ruleToIndex = new HashMap<>(allPossibleRules.length);
 		for (int i = 0; i < allPossibleRules.length; i++)
 			ruleToIndex.put(allPossibleRules[i], i);
@@ -149,14 +158,14 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 				RunStats stats = result.stats();
 				Logging.printRunCompleted(stats);
 			} catch (ExecutionException e) {
-				out.printf("Run %d failed: %s%n", i + 1, e.getCause().getMessage());
+				log.warn("Run {} failed: {}", i + 1, e.getCause().getMessage());
 			}
 		}
 		executor.shutdown();
 
 		RunResult best = bestResult(runResults);
 
-		out.println("\n=== Run summary ===");
+		log.info("=== Run summary ===");
         for (RunResult r : runResults) {
             RunStats stats = r.stats();
             Logging.printSummaryLine(stats);
@@ -230,7 +239,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			boolean[] mask = toMask(grammar);
 			double score = getBitsPerBase(objectiveDatasetLimited, RuleProbType.ADAPTIVE, grammar, withNonCanonicalRules);
 			if (!Double.isFinite(score)) continue;
-			out.printf("Seed candidate %d: size=%d bits/base=%.4f%n", attempt, grammar.size(), score);
+			log.info("Seed candidate {}: size={} bits/base={}", attempt, grammar.size(), String.format("%.4f", score));
 			return new SearchState(mask, grammar, score);
 		}
 		throw new IllegalStateException("Could not find a parsable seed grammar after " + maxAttempts + " attempts");
