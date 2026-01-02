@@ -1,6 +1,5 @@
 package compression.grammargenerator.localsearch;
 
-import compression.grammargenerator.localsearch.dataclasses.Config;
 import compression.grammargenerator.localsearch.dataclasses.RunResult;
 import compression.grammargenerator.localsearch.dataclasses.SearchStrategy;
 import org.slf4j.Logger;
@@ -34,8 +33,8 @@ public final class StrategyComparison {
 		log.info("=== Strategy comparison ===");
 		if (bestFirst != null) {
 			log.info("First improvement best: bits/base={} size={} seed={} run={}",
-					format(bestFirst.best().bitsPerBase()),
-					bestFirst.best().grammar().size(),
+					format(bestFirst.best().getBitsPerBase()),
+					bestFirst.best().getGrammar().size(),
 					bestFirst.stats().seed(),
 					bestFirst.stats().runNumber());
 		} else {
@@ -44,8 +43,8 @@ public final class StrategyComparison {
 
 		if (bestBest != null) {
 			log.info("Best improvement best: bits/base={} size={} seed={} run={}",
-					format(bestBest.best().bitsPerBase()),
-					bestBest.best().grammar().size(),
+					format(bestBest.best().getBitsPerBase()),
+					bestBest.best().getGrammar().size(),
 					bestBest.stats().seed(),
 					bestBest.stats().runNumber());
 		} else {
@@ -53,7 +52,7 @@ public final class StrategyComparison {
 		}
 
 		if (bestFirst != null && bestBest != null) {
-			double delta = bestFirst.best().bitsPerBase() - bestBest.best().bitsPerBase();
+			double delta = bestFirst.best().getBitsPerBase() - bestBest.best().getBitsPerBase();
 			String winner = delta > 0 ? "Best-improvement wins" : delta < 0 ? "First-improvement wins" : "Tie";
 			log.info("Comparison: {} (delta={} bits/base)", winner, format(Math.abs(delta)));
 		}

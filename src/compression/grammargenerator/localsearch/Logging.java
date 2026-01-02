@@ -1,7 +1,6 @@
 package compression.grammargenerator.localsearch;
 
 import compression.data.Dataset;
-import compression.grammargenerator.localsearch.dataclasses.Config;
 import compression.grammargenerator.localsearch.dataclasses.RunResult;
 import compression.grammargenerator.localsearch.dataclasses.RunStats;
 import org.slf4j.Logger;
@@ -80,8 +79,8 @@ public final class Logging {
 		log.info("Best overall: {} seed={} size={} bits/base={}",
 				runLabel(best.stats().runNumber()),
 				best.stats().seed(),
-				best.best().grammar().size(),
-				formatScore(best.best().bitsPerBase()));
+				best.best().getGrammar().size(),
+				formatScore(best.best().getBitsPerBase()));
 	}
 
 	public static void printConfig(Config config, Dataset objectiveDataset, Dataset parsableDataset) {

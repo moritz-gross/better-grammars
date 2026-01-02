@@ -1,9 +1,12 @@
-package compression.grammargenerator.localsearch.dataclasses;
+package compression.grammargenerator.localsearch;
 
+import compression.grammargenerator.localsearch.dataclasses.SearchStrategy;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Value;
 import lombok.experimental.Accessors;
+
+import static compression.grammargenerator.localsearch.dataclasses.SearchStrategy.FIRST_IMPROVEMENT;
 
 /**
  * Configuration parameters for local search runs.
@@ -26,7 +29,7 @@ public class Config {
 	@Default boolean withNonCanonicalRules = false;
 	@Default int objectiveLimit = -1;
 	@Default int numRuns = 3;
-	@Default SearchStrategy searchStrategy = SearchStrategy.FIRST_IMPROVEMENT;
+	@Default SearchStrategy searchStrategy = FIRST_IMPROVEMENT;
 	@Default String objectiveDatasetName = "small-dataset";
 	@Default String parsableDatasetName = "minimal-parsable";
 	@Default int poolSize = 3;
