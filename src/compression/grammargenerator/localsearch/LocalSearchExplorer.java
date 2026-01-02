@@ -123,8 +123,8 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
 			SecondaryStructureGrammar grammar = generator.randomGrammar(random, nRules);
 			SRFParser<Character> parser = new SRFParser<>(grammar);
-		if (!ParsabilityChecker.passesDataset(parser, parsableDatasetWords)) continue;
-		if (!ParsabilityChecker.passesDataset(parser, objectiveDatasetWords)) continue;
+		if (!Utils.passesDataset(parser, parsableDatasetWords)) continue;
+		if (!Utils.passesDataset(parser, objectiveDatasetWords)) continue;
 			boolean[] mask = ruleMaskCodec.toMask(grammar);
 			double score = getBitsPerBase(objectiveDatasetLimited, RuleProbType.ADAPTIVE, grammar, withNonCanonicalRules);
 			if (!Double.isFinite(score)) continue;

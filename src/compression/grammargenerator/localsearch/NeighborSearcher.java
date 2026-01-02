@@ -49,8 +49,8 @@ final class NeighborSearcher {
 			SecondaryStructureGrammar candidateGrammar = ruleMaskCodec.buildGrammarIfValid(candidateMask);
 			if (candidateGrammar == null) continue;
 			SRFParser<Character> parser = new SRFParser<>(candidateGrammar);
-			if (!ParsabilityChecker.passesDataset(parser, parsableDatasetWords)) continue;
-			if (!ParsabilityChecker.passesDataset(parser, objectiveDatasetWords)) continue;
+			if (!Utils.passesDataset(parser, parsableDatasetWords)) continue;
+			if (!Utils.passesDataset(parser, objectiveDatasetWords)) continue;
 			double score = scoreEvaluator.score(candidateGrammar);
 			evaluated++;
 			neighborIndex++;

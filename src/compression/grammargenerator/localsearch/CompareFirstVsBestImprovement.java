@@ -9,8 +9,8 @@ import java.util.List;
 /**
  * Runs local search with both neighbor selection strategies and prints a comparison.
  */
-public final class StrategyComparison {
-	private StrategyComparison() {
+public final class CompareFirstVsBestImprovement {
+	private CompareFirstVsBestImprovement() {
 		// utility
 	}
 

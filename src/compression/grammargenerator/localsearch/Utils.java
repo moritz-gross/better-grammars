@@ -8,8 +8,8 @@ import java.util.List;
 /**
  * Shared parsability check for datasets.
  */
-final class ParsabilityChecker {
-	private ParsabilityChecker() {
+final class Utils {
+	private Utils() {
 		// utility
 	}
 
