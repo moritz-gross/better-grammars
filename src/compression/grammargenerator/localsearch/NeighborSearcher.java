@@ -5,6 +5,7 @@ import compression.grammar.Terminal;
 import compression.grammargenerator.localsearch.dataclasses.NeighborSearchOutcome;
 import compression.grammargenerator.localsearch.dataclasses.SearchState;
 import compression.grammargenerator.localsearch.dataclasses.SearchStrategy;
+import compression.grammargenerator.localsearch.dataclasses.SearchStrategy.ImprovementTracker;
 import compression.parser.SRFParser;
 import lombok.RequiredArgsConstructor;
 
@@ -21,8 +22,6 @@ import java.util.Set;
  */
 @RequiredArgsConstructor
 final class NeighborSearcher {
-	private static final double IMPROVEMENT_EPS = 1e-3; // at least 1/1000
-
 	private final RuleMaskCodec ruleMaskCodec;
 	private final List<List<Terminal<Character>>> parsableDatasetWords;
 	private final List<List<Terminal<Character>>> objectiveDatasetWords;
@@ -39,8 +38,7 @@ final class NeighborSearcher {
 		int evaluated = 0;
 		int neighborIndex = 0;
 		int considered = 0;
-		SearchState bestImprovement = null;
-		int bestImprovementIndex = -1;
+		ImprovementTracker tracker = strategy.newTracker();
 		for (Move move : moves) {
 			if (maxCandidatesPerStep >= 0 && considered >= maxCandidatesPerStep) break;
 			if (evaluated >= maxNeighborEvaluations) break;
@@ -54,28 +52,25 @@ final class NeighborSearcher {
 			double score = scoreEvaluator.score(candidateGrammar);
 			evaluated++;
 			neighborIndex++;
-			if (score + IMPROVEMENT_EPS < current.getBitsPerBase()) {
+			if (score < current.getBitsPerBase()) {
 				SearchState candidateState = new SearchState(candidateMask, candidateGrammar, score);
-				if (strategy == SearchStrategy.FIRST_IMPROVEMENT) {
+				tracker.consider(candidateState, neighborIndex);
+				if (tracker.shouldStop()) {
 					return new NeighborSearchOutcome(
-							candidateState,
+							tracker.best(),
 							evaluated,
-							neighborIndex,
+							tracker.bestIndex(),
 							current.getGrammar().size(),
 							current.getBitsPerBase(),
 							true);
 				}
-				if (bestImprovement == null || score < bestImprovement.getBitsPerBase()) {
-					bestImprovement = candidateState;
-					bestImprovementIndex = neighborIndex;
-				}
 			}
 		}
-		if (bestImprovement != null) {
+		if (tracker.hasImprovement()) {
 			return new NeighborSearchOutcome(
-					bestImprovement,
+					tracker.best(),
 					evaluated,
-					bestImprovementIndex,
+					tracker.bestIndex(),
 					current.getGrammar().size(),
 					current.getBitsPerBase(),
 					true);
