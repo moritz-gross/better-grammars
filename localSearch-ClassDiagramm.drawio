@@ -1,0 +1,198 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36" version="29.2.9">
+  <diagram id="OBbxU_wHlsWBuMrd9wv8" name="Seite-1">
+    <mxGraphModel dx="1826" dy="1151" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" background="none" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="node9" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;CompareFirstVsBestImprovement&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;+ main(String[]): void&lt;/p&gt;" vertex="1">
+          <mxGeometry height="68" width="313" x="-23" y="1855" as="geometry" />
+        </mxCell>
+        <mxCell id="node7" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;DatasetBundle&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;- parsableDatasetWords: List&amp;lt;List&amp;lt;Terminal&amp;lt;Character&amp;gt;&amp;gt;&amp;gt;&lt;br/&gt;- objectiveDatasetLimited: Dataset&lt;br/&gt;- objectiveDatasetWords: List&amp;lt;List&amp;lt;Terminal&amp;lt;Character&amp;gt;&amp;gt;&amp;gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;+ getObjectiveDatasetLimited(): Dataset&lt;br/&gt;+ getParsableDatasetWords(): List&amp;lt;List&amp;lt;Terminal&amp;lt;Character&amp;gt;&amp;gt;&amp;gt;&lt;br/&gt;+ getObjectiveDatasetWords(): List&amp;lt;List&amp;lt;Terminal&amp;lt;Character&amp;gt;&amp;gt;&amp;gt;&lt;br/&gt;+ equals(Object): boolean&lt;br/&gt;+ hashCode(): int&lt;br/&gt;+ toString(): String&lt;br/&gt;~ from(Dataset, Dataset, int): DatasetBundle&lt;/p&gt;" vertex="1">
+          <mxGeometry height="280" width="442" x="452" y="166" as="geometry" />
+        </mxCell>
+        <mxCell id="node6" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;LocalSearchExplorer&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;- random: Random&lt;br/&gt;- searchStrategy: SearchStrategy&lt;br/&gt;- ruleMaskCodec: RuleMaskCodec&lt;br/&gt;- objectiveDatasetWords: List&amp;lt;List&amp;lt;Terminal&amp;lt;Character&amp;gt;&amp;gt;&amp;gt;&lt;br/&gt;- withNonCanonicalRules: boolean&lt;br/&gt;- neighborSearcher: NeighborSearcher&lt;br/&gt;- seed: long&lt;br/&gt;- objectiveDatasetLimited: Dataset&lt;br/&gt;- parsableDatasetWords: List&amp;lt;List&amp;lt;Terminal&amp;lt;Character&amp;gt;&amp;gt;&amp;gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;+ main(String[]): void&lt;br/&gt;- sampleParsableSeed(int, int): SearchState&lt;br/&gt;+ runWithConfig(Config): List&amp;lt;RunResult&amp;gt;&lt;br/&gt;+ bestResult(List&amp;lt;RunResult&amp;gt;): RunResult&lt;br/&gt;~ runSingleRun(int, int, int, int, int, int, int): RunResult&lt;/p&gt;" vertex="1">
+          <mxGeometry height="376" width="409" x="129" y="1378" as="geometry" />
+        </mxCell>
+        <mxCell id="node3" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;LocalSearchRunner&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;~ run(Config): List&amp;lt;RunResult&amp;gt;&lt;/p&gt;" vertex="1">
+          <mxGeometry height="68" width="227" x="200" y="1995" as="geometry" />
+        </mxCell>
+        <mxCell id="node0" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;Logging&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;- log: Logger&lt;br/&gt;- RUN_COLORS: String[]&lt;br/&gt;- ANSI_RESET: String&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;- colorForRun(int): String&lt;br/&gt;+ printLine(String): void&lt;br/&gt;+ printRunFailure(int, Throwable): void&lt;br/&gt;+ printBestOverall(RunResult): void&lt;br/&gt;+ printRunStart(int, int, long): void&lt;br/&gt;+ printRunCompleted(RunStats): void&lt;br/&gt;+ printStepNoImprovement(int, int, int, double, int): void&lt;br/&gt;+ printStepImprovement(int, int, int, double, int, int, int, double): void&lt;br/&gt;- formatScore(double): String&lt;br/&gt;+ printSummaryLine(RunStats): void&lt;br/&gt;+ printSeedCandidate(int, int, double): void&lt;br/&gt;+ printSeed(int, int, double): void&lt;br/&gt;+ printConfig(Config, Dataset, Dataset): void&lt;br/&gt;+ printRunSummaryHeader(): void&lt;br/&gt;+ runLabel(int): String&lt;/p&gt;" vertex="1">
+          <mxGeometry height="472" width="424" x="461" y="870" as="geometry" />
+        </mxCell>
+        <mxCell id="node10" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;i&gt;&amp;lt;&amp;lt;record&amp;gt;&amp;gt;&lt;/i&gt;&lt;br/&gt;&lt;b&gt;Move&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;- type: Type&lt;br/&gt;- source: int&lt;br/&gt;- target: int&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;~ swap(int, int): Move&lt;br/&gt;~ add(int): Move&lt;br/&gt;+ source(): int&lt;br/&gt;+ type(): Type&lt;br/&gt;+ target(): int&lt;br/&gt;~ remove(int): Move&lt;/p&gt;" vertex="1">
+          <mxGeometry height="272" width="170" x="-272" y="1438" as="geometry" />
+        </mxCell>
+        <mxCell id="node5" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;NeighborSearcher&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;- objectiveDatasetWords: List&amp;lt;List&amp;lt;Terminal&amp;lt;Character&amp;gt;&amp;gt;&amp;gt;&lt;br/&gt;- scoreEvaluator: ScoreEvaluator&lt;br/&gt;- ruleMaskCodec: RuleMaskCodec&lt;br/&gt;- parsableDatasetWords: List&amp;lt;List&amp;lt;Terminal&amp;lt;Character&amp;gt;&amp;gt;&amp;gt;&lt;br/&gt;- random: Random&lt;br/&gt;- IMPROVEMENT_EPS: double&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;~ search(SearchState, int, int, int, SearchStrategy): NeighborSearchOutcome&lt;br/&gt;- enumerateMoves(boolean[], int): List&amp;lt;Move&amp;gt;&lt;br/&gt;- applyMove(boolean[], Move): boolean[]&lt;/p&gt;" vertex="1">
+          <mxGeometry height="256" width="514" x="-264" y="538" as="geometry" />
+        </mxCell>
+        <mxCell id="node8" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;RuleMaskCodec&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;- ruleToIndex: Map&amp;lt;Rule, Integer&amp;gt;&lt;br/&gt;- startSymbol: NonTerminal&lt;br/&gt;- allPossibleRules: Rule[]&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;~ toMask(SecondaryStructureGrammar): boolean[]&lt;br/&gt;~ buildGrammarIfValid(boolean[]): SecondaryStructureGrammar?&lt;/p&gt;" vertex="1">
+          <mxGeometry height="160" width="434" x="-24" y="-14" as="geometry" />
+        </mxCell>
+        <mxCell id="node4" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;i&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;/i&gt;&lt;br/&gt;&lt;b&gt;ScoreEvaluator&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;+ score(SecondaryStructureGrammar): double&lt;/p&gt;" vertex="1">
+          <mxGeometry height="79" width="321" x="-267" y="275" as="geometry" />
+        </mxCell>
+        <mxCell id="node11" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;i&gt;&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;/i&gt;&lt;br/&gt;&lt;b&gt;Type&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;+ SWAP: &lt;br/&gt;+ ADD: &lt;br/&gt;+ REMOVE: &lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;+ valueOf(String): Type&lt;br/&gt;+ values(): Type[]&lt;/p&gt;" vertex="1">
+          <mxGeometry height="160" width="178" x="-236" y="1946" as="geometry" />
+        </mxCell>
+        <mxCell id="node2" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;Utils&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.6;&quot;&gt;~ passesDataset(SRFParser&amp;lt;Character&amp;gt;, List&amp;lt;List&amp;lt;Terminal&amp;lt;Character&amp;gt;&amp;gt;&amp;gt;): boolean&lt;/p&gt;" vertex="1">
+          <mxGeometry height="68" width="501" x="383" y="635" as="geometry" />
+        </mxCell>
+        <mxCell id="node1" parent="1" style="verticalAlign=top;align=left;overflow=fill;fontSize=14;fontFamily=Helvetica;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;i&gt;&amp;lt;&amp;lt;package&amp;gt;&amp;gt;&lt;/i&gt;&lt;br/&gt;&lt;b&gt;package  compression.grammargenerator.localsearch.dataclasses&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;" vertex="1">
+          <mxGeometry height="35" width="544" x="341" y="1872" as="geometry" />
+        </mxCell>
+        <mxCell id="edge4" edge="1" parent="1" source="node6" style="html=1;rounded=1;edgeStyle=orthogonalEdgeStyle;dashed=1;startArrow=none;endArrow=openThin;endSize=12;strokeColor=#595959;exitX=0.750;exitY=0.000;exitDx=0;exitDy=0;entryX=0.750;entryY=1.000;entryDx=0;entryDy=0;" target="node5" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="435" y="1346" />
+              <mxPoint x="353" y="1346" />
+              <mxPoint x="353" y="1306" />
+              <mxPoint x="122" y="1306" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label26" connectable="0" parent="edge4" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="«create»" vertex="1">
+          <mxGeometry x="327" y="1326" as="geometry" />
+        </mxCell>
+        <mxCell id="edge5" edge="1" parent="1" source="node6" style="html=1;rounded=1;edgeStyle=orthogonalEdgeStyle;dashed=0;startArrow=diamondThinstartSize=12;endArrow=openThin;endSize=12;strokeColor=#595959;exitX=0.250;exitY=0.000;exitDx=0;exitDy=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;" target="node5" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="231" y="1346" />
+              <mxPoint x="273" y="1346" />
+              <mxPoint x="273" y="506" />
+              <mxPoint x="-7" y="506" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label30" connectable="0" parent="edge5" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="1" vertex="1">
+          <mxGeometry x="246" y="1326" as="geometry" />
+        </mxCell>
+        <mxCell id="label34" connectable="0" parent="edge5" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="1" vertex="1">
+          <mxGeometry x="34" y="486" as="geometry" />
+        </mxCell>
+        <mxCell id="label35" connectable="0" parent="edge5" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="neighborSearcher" vertex="1">
+          <mxGeometry x="-7" y="512" as="geometry" />
+        </mxCell>
+        <mxCell id="edge7" edge="1" parent="1" source="node6" style="html=1;rounded=1;edgeStyle=orthogonalEdgeStyle;dashed=1;startArrow=none;endArrow=openThin;endSize=12;strokeColor=#595959;exitX=0.750;exitY=0.000;exitDx=0;exitDy=0;entryX=0.750;entryY=1.000;entryDx=0;entryDy=0;" target="node8" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="435" y="1346" />
+              <mxPoint x="353" y="1346" />
+              <mxPoint x="353" y="166" />
+              <mxPoint x="302" y="166" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label44" connectable="0" parent="edge7" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="«create»" vertex="1">
+          <mxGeometry x="301" y="746" as="geometry" />
+        </mxCell>
+        <mxCell id="edge9" edge="1" parent="1" source="node6" style="html=1;rounded=1;edgeStyle=orthogonalEdgeStyle;dashed=0;startArrow=diamondThinstartSize=12;endArrow=openThin;endSize=12;strokeColor=#595959;exitX=0.250;exitY=0.000;exitDx=0;exitDy=0;entryX=0.250;entryY=1.000;entryDx=0;entryDy=0;" target="node8" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="231" y="1346" />
+              <mxPoint x="273" y="1346" />
+              <mxPoint x="273" y="1286" />
+              <mxPoint x="313" y="1286" />
+              <mxPoint x="313" y="186" />
+              <mxPoint x="93" y="186" />
+              <mxPoint x="93" y="166" />
+              <mxPoint x="85" y="166" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label54" connectable="0" parent="edge9" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="1" vertex="1">
+          <mxGeometry x="288" y="1266" as="geometry" />
+        </mxCell>
+        <mxCell id="label58" connectable="0" parent="edge9" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="1" vertex="1">
+          <mxGeometry x="253" y="166" as="geometry" />
+        </mxCell>
+        <mxCell id="label59" connectable="0" parent="edge9" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="ruleMaskCodec" vertex="1">
+          <mxGeometry x="93" y="166" as="geometry" />
+        </mxCell>
+        <mxCell id="edge2" edge="1" parent="1" source="node3" style="html=1;rounded=1;edgeStyle=orthogonalEdgeStyle;dashed=1;startArrow=none;endArrow=openThin;endSize=12;strokeColor=#595959;exitX=0.500;exitY=0.001;exitDx=0;exitDy=0;entryX=0.750;entryY=0.000;entryDx=0;entryDy=0;" target="node6" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="313" y="1826" />
+              <mxPoint x="113" y="1826" />
+              <mxPoint x="113" y="1326" />
+              <mxPoint x="435" y="1326" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label14" connectable="0" parent="edge2" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="«create»" vertex="1">
+          <mxGeometry x="61" y="1566" as="geometry" />
+        </mxCell>
+        <mxCell id="edge1" edge="1" parent="1" source="node10" style="html=1;rounded=1;edgeStyle=orthogonalEdgeStyle;dashed=0;startArrow=circlePlus;startFill=0;endArrow=none;strokeColor=#820000;exitX=0.500;exitY=0.000;exitDx=0;exitDy=0;entryX=0.250;entryY=1.000;entryDx=0;entryDy=0;" target="node5" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="-187" y="1386" />
+              <mxPoint x="-135" y="1386" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge8" edge="1" parent="1" source="node10" style="html=1;rounded=1;edgeStyle=orthogonalEdgeStyle;dashed=0;startArrow=diamondThinstartSize=12;endArrow=openThin;endSize=12;strokeColor=#595959;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;entryX=0.250;entryY=0.000;entryDx=0;entryDy=0;" target="node11" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="-187" y="1926" />
+              <mxPoint x="-191" y="1926" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label48" connectable="0" parent="edge8" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="1" vertex="1">
+          <mxGeometry x="-198" y="1730" as="geometry" />
+        </mxCell>
+        <mxCell id="label52" connectable="0" parent="edge8" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="1" vertex="1">
+          <mxGeometry x="-202" y="1921" as="geometry" />
+        </mxCell>
+        <mxCell id="label53" connectable="0" parent="edge8" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="type" vertex="1">
+          <mxGeometry x="-187" y="1916" as="geometry" />
+        </mxCell>
+        <mxCell id="edge6" edge="1" parent="1" source="node5" style="html=1;rounded=1;edgeStyle=orthogonalEdgeStyle;dashed=0;startArrow=diamondThinstartSize=12;endArrow=openThin;endSize=12;strokeColor=#595959;exitX=0.500;exitY=0.000;exitDx=0;exitDy=0;entryX=0.250;entryY=1.000;entryDx=0;entryDy=0;" target="node8" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="-7" y="466" />
+              <mxPoint x="93" y="466" />
+              <mxPoint x="93" y="166" />
+              <mxPoint x="85" y="166" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label36" connectable="0" parent="edge6" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="1" vertex="1">
+          <mxGeometry x="71" y="446" as="geometry" />
+        </mxCell>
+        <mxCell id="label40" connectable="0" parent="edge6" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="1" vertex="1">
+          <mxGeometry x="82" y="206" as="geometry" />
+        </mxCell>
+        <mxCell id="label41" connectable="0" parent="edge6" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="ruleMaskCodec" vertex="1">
+          <mxGeometry x="93" y="206" as="geometry" />
+        </mxCell>
+        <mxCell id="edge3" edge="1" parent="1" source="node5" style="html=1;rounded=1;edgeStyle=orthogonalEdgeStyle;dashed=0;startArrow=diamondThinstartSize=12;endArrow=openThin;endSize=12;strokeColor=#595959;exitX=0.500;exitY=0.000;exitDx=0;exitDy=0;entryX=0.500;entryY=1.001;entryDx=0;entryDy=0;" target="node4" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="-7" y="486" />
+              <mxPoint x="-107" y="486" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label18" connectable="0" parent="edge3" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="1" vertex="1">
+          <mxGeometry x="-100" y="466" as="geometry" />
+        </mxCell>
+        <mxCell id="label22" connectable="0" parent="edge3" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="1" vertex="1">
+          <mxGeometry x="-118" y="343" as="geometry" />
+        </mxCell>
+        <mxCell id="label23" connectable="0" parent="edge3" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;strokeColor=default;" value="scoreEvaluator" vertex="1">
+          <mxGeometry x="-107" y="343" as="geometry" />
+        </mxCell>
+        <mxCell id="edge0" edge="1" parent="1" source="node11" style="html=1;rounded=1;edgeStyle=orthogonalEdgeStyle;dashed=0;startArrow=circlePlus;startFill=0;endArrow=none;strokeColor=#820000;exitX=0.750;exitY=0.000;exitDx=0;exitDy=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;" target="node10" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="-102" y="1926" />
+              <mxPoint x="-87" y="1926" />
+              <mxPoint x="-87" y="1406" />
+              <mxPoint x="-187" y="1406" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
