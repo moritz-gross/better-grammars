@@ -44,6 +44,7 @@ final class NeighborSearcher {
 			if (evaluated >= maxNeighborEvaluations) break;
 			considered++;
 			boolean[] candidateMask = applyMove(current.getRuleMask(), move);
+
 			SecondaryStructureGrammar candidateGrammar = ruleMaskCodec.buildGrammarIfValid(candidateMask);
 			if (candidateGrammar == null) continue;
 			SRFParser<Character> parser = new SRFParser<>(candidateGrammar);
@@ -89,9 +90,11 @@ final class NeighborSearcher {
 		List<Move> moves = new ArrayList<>();
 		for (Integer idx : present) {
 			moves.add(Move.remove(idx));
+        //    System.out.println("remove at: " + idx);
 		}
 		for (Integer idx : absent) {
 			moves.add(Move.add(idx));
+         //   System.out.println("add at: " + idx);
 		}
 
 		if (!present.isEmpty() && !absent.isEmpty() && maxSwapCandidates > 0) {
@@ -103,6 +106,7 @@ final class NeighborSearcher {
 				long key = (((long) from) << 32) | (to & 0xffffffffL);
 				if (seenPairs.add(key)) {
 					moves.add(Move.swap(from, to));
+               //     System.out.println("swap from: " + from + " -> " + to);
 				}
 			}
 		}

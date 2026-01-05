@@ -8,6 +8,7 @@ import compression.util.MyMultimap;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Encodes and decodes rule masks to and from grammars.
@@ -36,6 +37,15 @@ final class RuleMaskCodec {
 		}
 		return mask;
 	}
+    boolean[] toMask(final SecondaryStructureGrammar grammar, Random random) {
+        boolean[] mask = new boolean[allPossibleRules.length];
+        for (int i = 0; i < allPossibleRules.length; i++) {
+            double probability = random.nextDouble(1);
+            if(probability < 0.30) mask[i] = true;
+            else mask[i] = false;
+        }
+        return mask;
+    }
 
 	SecondaryStructureGrammar buildGrammarIfValid(final boolean[] mask) {
 		MyMultimap<NonTerminal, Rule> rules = new MyMultimap<>();
