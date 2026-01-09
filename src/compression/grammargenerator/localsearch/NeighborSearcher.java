@@ -34,7 +34,8 @@ final class NeighborSearcher {
 	                             final int maxCandidatesPerStep,
 	                             final SearchStrategy strategy) {
 		List<Move> moves = enumerateMoves(current.getRuleMask(), maxSwapCandidates);
-		Collections.shuffle(moves, random);
+		//Collections.shuffle(moves, random);
+        moves = rebalancedShuffle(moves);
 		int evaluated = 0;
 		int neighborIndex = 0;
 		int considered = 0;
@@ -145,4 +146,65 @@ final class NeighborSearcher {
 			return new Move(Type.SWAP, source, target);
 		}
 	}
+    /**
+     * @return a semi random sorted List of moves with a stochastic bias.
+     * important! not all elements are sorted with such a bias.
+     * The first part of the list is sorted with the bias.
+     * the second part of the list is filled with the moves that were not selected, since we do not want to loose moves
+     * here. (We obviously hope that the second part is almost never reached)
+     */
+    private List<Move> rebalancedShuffle(List<Move> moves){
+        List <Move> shuffledMoves = new ArrayList<>();
+        List <Move> addMoves = new ArrayList<>();
+        List <Move> removeMoves = new ArrayList<>();
+        List <Move> swapMoves = new ArrayList<>();
+
+        for(Move move : moves){
+            if(move.type == Move.Type.ADD){
+                addMoves.add(move);
+            } else if(move.type == Move.Type.REMOVE){
+                removeMoves.add(move);
+            } else{
+                swapMoves.add(move);
+            }
+        }
+
+        int addIndex = 0;
+        int removeIndex = 0;
+        int swapIndex = 0;
+        for(int i = 0; i < moves.size(); i++){
+            double probability = random.nextDouble(1);
+            if(probability < 0.2){
+                if(removeMoves.size() > removeIndex){
+                    shuffledMoves.add(removeMoves.get(removeIndex));
+                    removeIndex++;
+                }
+
+            } else if(probability < 0.6){
+                if(addMoves.size() > addIndex){
+                    shuffledMoves.add(addMoves.get(addIndex));
+                    addIndex++;
+                }
+            } else{
+                if(swapMoves.size() > swapIndex){
+                    shuffledMoves.add(swapMoves.get(swapIndex));
+                    swapIndex++;
+                }
+            }
+        }
+        //adds the not used possible moves just in case the semi random sorted/prioritized moves were unsuccessful
+        while(addMoves.size() > addIndex){
+            shuffledMoves.add(addMoves.get(addIndex));
+            addIndex++;
+        }
+        while(swapMoves.size() > swapIndex){
+            shuffledMoves.add(swapMoves.get(swapIndex));
+            swapIndex++;
+        }
+        while(removeMoves.size() > removeIndex){
+            shuffledMoves.add(removeMoves.get(removeIndex));
+            removeIndex++;
+        }
+        return shuffledMoves;
+    }
 }
