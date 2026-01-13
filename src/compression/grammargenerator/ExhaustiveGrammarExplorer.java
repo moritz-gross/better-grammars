@@ -55,7 +55,7 @@ public class ExhaustiveGrammarExplorer extends AbstractGrammarExplorer {
 		}
 		String prefix = (nBestToKeep == Integer.MAX_VALUE ? "all-" : "best-" + nBestToKeep + "-")
 				+ nNonterminals + "NTs-" + nRules + "rules-"
-				+ model + "-model-" + fullDataset.getName();
+				+ model + "-model-" + fullDataset.name();
 		File grammarsFolder = new File(LocalConfig.GIT_ROOT + "/grammars", prefix);
 		File logFile = new File(prefix + ".txt");
 		System.out.println("Storing grammars in folder " + grammarsFolder);

@@ -2,6 +2,12 @@ plugins {
     id 'java'
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(23)
+    }
+}
+
 def jarName = 'joint-rna-compression'
 def mainClassName = 'compression.Compressions'
 
@@ -19,6 +25,7 @@ sourceSets {
 }
 
 repositories {
+    mavenCentral()
     flatDir {
         dirs 'lib'
     }
@@ -26,6 +33,11 @@ repositories {
 
 dependencies {
     implementation fileTree(dir: 'lib', include: ['*.jar'])
+    implementation 'com.google.guava:guava:33.2.1-jre'
+    implementation 'org.slf4j:slf4j-simple:2.0.13'
+
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
 
     testImplementation 'junit:junit:4.13.2'
 }
@@ -63,4 +75,11 @@ tasks.named('test') {
 
 tasks.named('clean') {
     delete 'dist'
+}
+
+tasks.register('runLocalSearchExplorer', JavaExec) {
+    group = 'application'
+    description = 'Run the local search explorer'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'compression.grammargenerator.localsearch.LocalSearchExplorer'
 }

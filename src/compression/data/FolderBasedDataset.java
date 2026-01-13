@@ -40,7 +40,7 @@ public class FolderBasedDataset implements Dataset {
 	}
 
 	@Override
-	public String getName() {
+	public String name() {
 		return name;
 	}
 

@@ -80,11 +80,11 @@ public class CompressionBuiltinGrammars {
 
 
         String filename = "compression-ratios-"
-                + dataset.getName()
+                + dataset.name()
                 + "-grammars-" + ruleProbTyp
                 + "-withNCR-" + withNonCanonicalRules
                 + "-model-" + model
-                + (trainingDataset != null ? "-training-data-" + trainingDataset.getName() : "")
+                + (trainingDataset != null ? "-training-data-" + trainingDataset.name() : "")
                 + "-" + DATE_TIME_FOMATTER.format(LocalDateTime.now());
         CSVFile out = new CSVFile(new File(filename + ".csv"), csvHeader);
         // Print all parameters to a file

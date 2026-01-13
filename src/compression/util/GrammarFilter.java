@@ -47,7 +47,7 @@ public class GrammarFilter {
 				inputGrammarsFolder.folderName +
 				"-best-" + nBestGrammarsToKeep +
 				"-" + ruleProbType +
-				"-on-" + fullDataset.getName());
+				"-on-" + fullDataset.name());
 		if (!outputGrammarsFolder.mkdirs()) {
 			System.out.println("Could not create output folder " + outputGrammarsFolder);
 			System.out.println("Does it already exist?");

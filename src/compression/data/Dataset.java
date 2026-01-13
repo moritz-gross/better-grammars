@@ -10,6 +10,6 @@ import java.util.Iterator;
 public interface Dataset extends Iterable<RNAWithStructure> {
 	int getSize();
 
-	String getName();
+	String name();
 
 }
