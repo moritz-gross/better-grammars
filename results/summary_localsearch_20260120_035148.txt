@@ -1,0 +1,16 @@
+Local Search Summary
+====================
+Data file: results/localsearch_20260120_035148.csv
+
+Best Run: 2.0
+Initial Bits/Base: 4.497145
+Final Bits/Base: 2.873016
+Improvement: 1.624129
+Steps Taken: 18
+Total Neighbors Evaluated: 185
+
+All Runs Comparison:
+ Run  InitialBitsPerBase  FinalBitsPerBase  Improvement  ImprovementPct  StepsTaken  TotalNeighbors  Efficiency
+   2            4.497145          2.873016     1.624129       36.114668          18             185    8.779076
+   3            4.252595          2.880749     1.371846       32.259032          24             206    6.659447
+   1            3.754761          3.250535     0.504226       13.428977          10             125    4.033808
