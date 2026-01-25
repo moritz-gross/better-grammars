@@ -21,8 +21,14 @@ public final class Logging {
 	};
 	private static final String ANSI_RESET = "\u001B[0m";
 
+	private static CsvProgressWriter csvWriter = null;
+
 	private Logging() {
 		// utility
+	}
+
+	public static void setCsvWriter(CsvProgressWriter writer) {
+		csvWriter = writer;
 	}
 
 	public static void printRunStart(int runNumber, int totalRuns, long seed) {
@@ -31,6 +37,9 @@ public final class Logging {
 
 	public static void printSeed(int runNumber, int size, double bitsPerBase) {
 		log.info("{} seed: size={} bits/base={}", runLabel(runNumber), size, formatScore(bitsPerBase));
+		if (csvWriter != null) {
+			csvWriter.writeProgress(runNumber, -1, bitsPerBase, size, 0);
+		}
 	}
 
 	public static void printSeedCandidate(int attempt, int size, double bitsPerBase) {
@@ -40,6 +49,9 @@ public final class Logging {
 	public static void printStepNoImprovement(int runNumber, int step, int size, double score, int explored) {
 		log.info("{} step {}: size={} score={} | explored {} neighbors, no improvement",
 				runLabel(runNumber), step, size, formatScore(score), explored);
+		if (csvWriter != null) {
+			csvWriter.writeProgress(runNumber, step, score, size, explored);
+		}
 	}
 
 	public static void printStepImprovement(int runNumber,
@@ -59,6 +71,9 @@ public final class Logging {
 				improvementIndex,
 				newSize,
 				formatScore(newScore));
+		if (csvWriter != null) {
+			csvWriter.writeProgress(runNumber, step, newScore, newSize, explored);
+		}
 	}
 
 	public static void printRunCompleted(RunStats stats) {
