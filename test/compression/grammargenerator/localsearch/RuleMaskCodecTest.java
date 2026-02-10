@@ -7,6 +7,8 @@ import compression.grammar.Rule;
 import compression.grammar.SecondaryStructureGrammar;
 import org.junit.Test;
 
+import java.util.Random;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -62,5 +64,38 @@ public class RuleMaskCodecTest {
 		SecondaryStructureGrammar grammar = codec.buildGrammarIfValid(new boolean[] { true, false });
 		assertNotNull(grammar);
 		assertEquals(1, grammar.size());
+	}
+
+	/**
+	 * Confirms the random mask generation is deterministic for a fixed seed by
+	 * advancing two Random instances in lockstep (same seed, same number of calls).
+	 */
+	@Test
+	public void testToMaskRandomDeterministicForSeed() {
+		NonTerminal start = new NonTerminal("S");
+		Rule rDot = new Rule(start, new CharTerminal('.'));
+		Rule rOpen = new Rule(start, new CharTerminal('('));
+		Rule rClose = new Rule(start, new CharTerminal(')'));
+		RuleMaskCodec codec = new RuleMaskCodec(new Rule[] { rDot, rOpen, rClose }, start);
+
+		SecondaryStructureGrammar grammar = SecondaryStructureGrammar.from(
+				new Grammar.Builder<Character>("mask-source", start)
+						.addRule(rDot)
+						.addRule(rOpen)
+						.build());
+
+		final double DEFAULT_RULE_INCLUSION_PROB = 0.30; // matches hard-coded value in the implementation
+
+		long seed = 42;
+		Random random = new Random(seed);
+		Random expectedRandom = new Random(seed);
+		for (int sample = 0; sample < 100; sample++) {
+			boolean[] mask = codec.toMask(grammar, random);
+			boolean[] expected = new boolean[3];
+			for (int i = 0; i < expected.length; i++) {
+				expected[i] = expectedRandom.nextDouble(1) < DEFAULT_RULE_INCLUSION_PROB;
+			}
+			assertArrayEquals(expected, mask);
+		}
 	}
 }

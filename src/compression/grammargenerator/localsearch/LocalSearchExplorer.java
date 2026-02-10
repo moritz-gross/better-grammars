@@ -118,7 +118,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		return new RunResult(current, stats);
 	}
 
-	private SearchState sampleParsableSeed(final int nRules, final int maxAttempts) {
+	SearchState sampleParsableSeed(final int nRules, final int maxAttempts) {
 		RandomGrammarExplorer generator = new RandomGrammarExplorer(nNonterminals);
 		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
 			SecondaryStructureGrammar grammar = generator.randomGrammar(random, nRules);
