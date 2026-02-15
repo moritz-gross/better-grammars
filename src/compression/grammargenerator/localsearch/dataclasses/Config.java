@@ -27,11 +27,11 @@ public class Config {
 	@Default int maxSeedAttempts = 2000;
 	@Default boolean withNonCanonicalRules = false;
 	@Default int objectiveLimit = -1;
-	@Default int numRuns = 3;
+	@Default int numRuns = 100;
 	@Default SearchStrategy searchStrategy = FIRST_IMPROVEMENT;
 	@Default String objectiveDatasetName = "small-dataset";
 	@Default String parsableDatasetName = "minimal-parsable";
-	@Default int poolSize = 3;
+	@Default int poolSize = recommendedPoolSize();
 
 	public static Config defaults() {
 		return Config.builder().build();
@@ -43,5 +43,9 @@ public class Config {
 
 	public Config withMaxCandidatesPerStep(int value) {
 		return toBuilder().maxCandidatesPerStep(value).build();
+	}
+
+	public static int recommendedPoolSize() {
+		return Math.max(1, (int) Math.round(Runtime.getRuntime().availableProcessors() * 0.7));
 	}
 }

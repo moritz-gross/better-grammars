@@ -34,7 +34,15 @@ final class LocalSearchRunner {
 		Logging.setCsvWriter(csvWriter);
 
 		try {
-			ExecutorService executor = Executors.newFixedThreadPool(config.poolSize());
+			int configuredPoolSize = Math.max(1, config.poolSize());
+			int effectivePoolSize = Math.min(configuredPoolSize, Math.max(1, config.numRuns()));
+			Logging.printLine(String.format(
+					"effectivePoolSize = %d (configured=%d, numRuns=%d, availableProcessors=%d)",
+					effectivePoolSize,
+					configuredPoolSize,
+					config.numRuns(),
+					Runtime.getRuntime().availableProcessors()));
+			ExecutorService executor = Executors.newFixedThreadPool(effectivePoolSize);
 			List<Future<RunResult>> futures = new ArrayList<>();
 
 			for (int r = 0; r < config.numRuns(); r++) {

@@ -31,5 +31,5 @@ replay_pid*
 *.iml
 !gradle/wrapper/gradle-wrapper.jar
 /.ipynb_checkpoints/
-/.gradle-local/
 .venv/
+*.egg-info/

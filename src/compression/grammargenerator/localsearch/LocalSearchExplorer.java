@@ -63,7 +63,7 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 	}
 
 	public static void main(String[] args) throws Exception {
-		runWithConfig(Config.defaults());
+		runWithConfig(configFromSystemProperties(Config.defaults()));
 	}
 
 	public static List<RunResult> runWithConfig(final Config config) throws Exception {
@@ -132,6 +132,40 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			return new SearchState(mask, grammar, score);
 		}
 		throw new IllegalStateException("Could not find a parsable seed grammar after " + maxAttempts + " attempts");
+	}
+
+	private static Config configFromSystemProperties(final Config base) {
+		Config.ConfigBuilder builder = base.toBuilder();
+		Integer numRuns = intSetting("localsearch.numRuns", "LOCALSEARCH_NUM_RUNS");
+		if (numRuns != null) {
+			builder.numRuns(numRuns);
+		}
+		Integer poolSize = intSetting("localsearch.poolSize", "LOCALSEARCH_POOL_SIZE");
+		if (poolSize != null) {
+			builder.poolSize(poolSize);
+		}
+		return builder.build();
+	}
+
+	private static Integer intSetting(final String propertyKey, final String envKey) {
+		String raw = System.getProperty(propertyKey);
+		if (raw == null || raw.isBlank()) {
+			raw = System.getenv(envKey);
+		}
+		if (raw == null || raw.isBlank()) {
+			return null;
+		}
+		try {
+			int parsed = Integer.parseInt(raw.trim());
+			if (parsed < 1) {
+				throw new IllegalArgumentException(
+						"Setting must be >= 1 for property " + propertyKey + " / env " + envKey + ", got " + parsed);
+			}
+			return parsed;
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException(
+					"Setting must be an integer for property " + propertyKey + " / env " + envKey + ", got: " + raw, e);
+		}
 	}
 
 }
