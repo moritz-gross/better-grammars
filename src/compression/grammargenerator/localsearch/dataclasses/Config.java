@@ -27,7 +27,7 @@ public class Config {
 	@Default int maxSeedAttempts = 2000;
 	@Default boolean withNonCanonicalRules = false;
 	@Default int objectiveLimit = -1;
-	@Default int numRuns = 100;
+	@Default int numRuns = 200;
 	@Default SearchStrategy searchStrategy = FIRST_IMPROVEMENT;
 	@Default String objectiveDatasetName = "small-dataset";
 	@Default String parsableDatasetName = "minimal-parsable";
