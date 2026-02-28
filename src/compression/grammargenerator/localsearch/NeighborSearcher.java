@@ -80,7 +80,7 @@ final class NeighborSearcher {
                     current.getGrammar().size(),
                     current.getBitsPerBase(),
                     true
-                    //nso.getNext().getBitsPerBase() > current.getBitsPerBase()
+//                    nso.getNext().getBitsPerBase() > current.getBitsPerBase()
             );
         }
 		if (tracker.hasImprovement()) {

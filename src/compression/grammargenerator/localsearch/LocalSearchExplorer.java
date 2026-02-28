@@ -97,7 +97,9 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 			totalNeighborsEvaluated += outcome.getEvaluated();
 			if (!outcome.isImproved()) {
 				Logging.printStepNoImprovement(runNumber, step, current.getGrammar().size(), current.getBitsPerBase(), outcome.getEvaluated());
-				break;
+                if(Config.defaults().searchStrategy == SearchStrategy.FIRST_IMPROVEMENT || Config.defaults().searchStrategy == SearchStrategy.BEST_IMPROVEMENT) {
+                    break;
+                }
 			}
 			current = outcome.getNext();
 			Logging.printStepImprovement(

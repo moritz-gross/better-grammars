@@ -22,6 +22,11 @@ public enum SearchStrategy {
         public ImprovementTracker newTracker() {
             return new StochasticImprovementTracker();
         }
+    },
+    FIRST_OR_STOCHASTIC_IMPROVEMENT {
+        public ImprovementTracker newTracker() {
+            return new FirstOrStochastikImprovementTracker();
+        }
     }
     ;
 
@@ -85,7 +90,6 @@ public enum SearchStrategy {
             return null;
         }
 
-
             @Override
         public boolean shouldStop() {
             return hasImprovement();
@@ -141,6 +145,36 @@ public enum SearchStrategy {
             @Override
         public boolean shouldStop() {
             return false;
+        }
+    }
+
+    private static final class FirstOrStochastikImprovementTracker extends ImprovementTracker {
+        @Override
+        protected boolean accept(SearchState candidate) {
+            return !hasImprovement();
+        }
+
+        @Override
+        public boolean stochastic() {
+            return true;
+        }
+
+        public NeighborSearchOutcome getStochasticImprovement(Random random){
+            sortedNeighbours.sort(Comparator.comparing(SearchState::getBitsPerBase));
+
+            //better improvements are more likely than weaker improvements:
+            for(int i = 0; i < sortedNeighbours.size(); i++){
+                double randomNumber = random.nextDouble();
+                if(randomNumber >= 0.5){
+                    return new NeighborSearchOutcome(sortedNeighbours.get(i), -1, indexes.get(sortedNeighbours.get(i)), -1, -1, false);
+                }
+            }
+            return new NeighborSearchOutcome(sortedNeighbours.getLast(), -1, indexes.get(sortedNeighbours.getLast()), -1, -1, false);
+        }
+
+        @Override
+        public boolean shouldStop() {
+            return hasImprovement();
         }
     }
 }
