@@ -68,6 +68,17 @@ final class NeighborSearcher {
 				}
 			}
 		}
+
+        if(tracker.stochastic()){
+            NeighborSearchOutcome nso = tracker.getStochasticImprovement();
+            return new NeighborSearchOutcome(
+                    nso.getNext(),
+                    evaluated,
+                    nso.getImprovementNeighborIndex(),
+                    current.getGrammar().size(),
+                    current.getBitsPerBase(),
+                    nso.getNext().getBitsPerBase() > current.getBitsPerBase());
+        }
 		if (tracker.hasImprovement()) {
 			return new NeighborSearchOutcome(
 					tracker.best(),
