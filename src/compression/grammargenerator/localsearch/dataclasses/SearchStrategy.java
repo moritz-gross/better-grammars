@@ -55,7 +55,7 @@ public enum SearchStrategy {
 
         public abstract boolean shouldStop();
 
-        public abstract NeighborSearchOutcome getStochasticImprovement();
+        public abstract NeighborSearchOutcome getStochasticImprovement(Random random);
 
         public boolean hasImprovement() {
             return best != null;
@@ -81,7 +81,7 @@ public enum SearchStrategy {
             return false;
         }
 
-        public NeighborSearchOutcome getStochasticImprovement(){
+        public NeighborSearchOutcome getStochasticImprovement(Random random){
             return null;
         }
 
@@ -109,12 +109,11 @@ public enum SearchStrategy {
             return false;
         }
 
-        public NeighborSearchOutcome getStochasticImprovement(){
+        public NeighborSearchOutcome getStochasticImprovement(Random random){
 
             sortedNeighbours.sort(Comparator.comparing(SearchState::getBitsPerBase));
 
             //better improvements are more likely than weaker improvements:
-            Random random = new Random();
             for(int i = 0; i < sortedNeighbours.size(); i++){
                 double randomNumber = random.nextDouble();
                 if(randomNumber >= 0.5){
@@ -135,7 +134,7 @@ public enum SearchStrategy {
         public boolean stochastic() {
             return false;
         }
-        public NeighborSearchOutcome getStochasticImprovement(){
+        public NeighborSearchOutcome getStochasticImprovement(Random random){
             return null;
         }
 

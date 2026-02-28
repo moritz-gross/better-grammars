@@ -32,7 +32,8 @@ final class NeighborSearcher {
 	                             final int maxSwapCandidates,
 	                             final int maxNeighborEvaluations,
 	                             final int maxCandidatesPerStep,
-	                             final SearchStrategy strategy) {
+	                             final SearchStrategy strategy,
+                                 final Random randomStochasticStrategy) {
 		List<Move> moves = enumerateMoves(current.getRuleMask(), maxSwapCandidates);
 		//Collections.shuffle(moves, random);
         moves = rebalancedShuffle(moves);
@@ -70,14 +71,17 @@ final class NeighborSearcher {
 		}
 
         if(tracker.stochastic()){
-            NeighborSearchOutcome nso = tracker.getStochasticImprovement();
+            randomStochasticStrategy.nextDouble();
+            NeighborSearchOutcome nso = tracker.getStochasticImprovement(randomStochasticStrategy);
             return new NeighborSearchOutcome(
                     nso.getNext(),
                     evaluated,
                     nso.getImprovementNeighborIndex(),
                     current.getGrammar().size(),
                     current.getBitsPerBase(),
-                    nso.getNext().getBitsPerBase() > current.getBitsPerBase());
+                    true
+                    //nso.getNext().getBitsPerBase() > current.getBitsPerBase()
+            );
         }
 		if (tracker.hasImprovement()) {
 			return new NeighborSearchOutcome(

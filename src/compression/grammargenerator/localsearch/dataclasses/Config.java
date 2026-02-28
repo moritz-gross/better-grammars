@@ -6,6 +6,7 @@ import lombok.Value;
 import lombok.experimental.Accessors;
 
 import static compression.grammargenerator.localsearch.dataclasses.SearchStrategy.FIRST_IMPROVEMENT;
+import static compression.grammargenerator.localsearch.dataclasses.SearchStrategy.STOCHASTIC_IMPROVEMENT;
 
 /**
  * Configuration parameters for local search runs.
@@ -23,12 +24,12 @@ public class Config {
 	/**
 	 * Maximum number of neighbor candidates to consider per step; use -1 to explore all.
 	 */
-	@Default int maxCandidatesPerStep = 100;
-	@Default int maxSeedAttempts = 2000;
+	@Default int maxCandidatesPerStep = 50; //100
+	@Default int maxSeedAttempts = 10000; //2000
 	@Default boolean withNonCanonicalRules = false;
 	@Default int objectiveLimit = -1;
 	@Default int numRuns = 3;
-	@Default SearchStrategy searchStrategy = FIRST_IMPROVEMENT;
+	@Default SearchStrategy searchStrategy = STOCHASTIC_IMPROVEMENT;
 	@Default String objectiveDatasetName = "small-dataset";
 	@Default String parsableDatasetName = "minimal-parsable";
 	@Default int poolSize = 3;
