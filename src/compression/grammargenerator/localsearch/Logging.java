@@ -86,7 +86,11 @@ public final class Logging {
 	}
 
 	public static void printRunFailure(int runNumber, Throwable cause) {
-		log.warn("Run {} failed: {}", runNumber, cause == null ? "unknown error" : cause.getMessage());
+		if (cause == null) {
+			log.error("Run {} failed: unknown error", runNumber);
+		} else {
+			log.error("Run {} failed: {} - {}", runNumber, cause.getClass().getSimpleName(), cause.getMessage(), cause);
+		}
 	}
 
 	public static void printRunSummaryHeader() {
