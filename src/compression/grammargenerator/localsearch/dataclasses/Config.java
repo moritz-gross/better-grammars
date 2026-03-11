@@ -5,7 +5,7 @@ import lombok.Builder.Default;
 import lombok.Value;
 import lombok.experimental.Accessors;
 
-import static compression.grammargenerator.localsearch.dataclasses.SearchStrategy.FIRST_IMPROVEMENT;
+import static compression.grammargenerator.localsearch.dataclasses.SearchStrategy.*;
 
 /**
  * Configuration parameters for local search runs.
@@ -28,7 +28,7 @@ public class Config {
 	@Default boolean withNonCanonicalRules = false;
 	@Default int objectiveLimit = -1;
 	@Default int numRuns = 3;
-	@Default SearchStrategy searchStrategy = FIRST_IMPROVEMENT;
+	@Default public SearchStrategy searchStrategy = STOCHASTIC_IMPROVEMENT;
 	@Default String objectiveDatasetName = "small-dataset";
 	@Default String parsableDatasetName = "minimal-parsable";
 	@Default int poolSize = 3;
