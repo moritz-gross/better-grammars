@@ -1,31 +1,42 @@
 package compression.grammargenerator.localsearch.dataclasses;
 
+import compression.grammargenerator.localsearch.Logging;
+
 import java.util.*;
 
 /**
  * Neighbor selection strategy for local search.
  */
 public enum SearchStrategy {
+
+    /**
+     * The first neighboring grammar found that is better than the current grammar is selected
+     */
     FIRST_IMPROVEMENT {
         @Override
         public ImprovementTracker newTracker() {
             return new FirstImprovementTracker();
         }
     },
+
+    /**
+     * All neighboring grammars or as much as allowed by the config that are an improvement, are considered and the best one will be selected
+     */
     BEST_IMPROVEMENT {
         @Override
         public ImprovementTracker newTracker() {
             return new BestImprovementTracker();
         }
     },
+
+    /**
+     * All neighboring grammars or as much as allowed by the config that are an improvement, are saved in a list.
+     * The list is sorted with the best grammar at the front. In the list the n-th element (starting with 1) will be
+     * selected with the likeliness 1/2^n
+     */
     STOCHASTIC_IMPROVEMENT {
         public ImprovementTracker newTracker() {
             return new StochasticImprovementTracker();
-        }
-    },
-    FIRST_OR_STOCHASTIC_IMPROVEMENT {
-        public ImprovementTracker newTracker() {
-            return new FirstOrStochastikImprovementTracker();
         }
     }
     ;
@@ -96,38 +107,6 @@ public enum SearchStrategy {
         }
     }
 
-    private static final class StochasticImprovementTracker extends ImprovementTracker {
-
-        @Override
-        protected boolean accept(SearchState candidate) {
-            return false;
-        }
-
-        @Override
-        public boolean stochastic() {
-            return true;
-        }
-
-        @Override
-        public boolean shouldStop() {
-            return false;
-        }
-
-        public NeighborSearchOutcome getStochasticImprovement(Random random){
-
-            sortedNeighbours.sort(Comparator.comparing(SearchState::getBitsPerBase));
-
-            //better improvements are more likely than weaker improvements:
-            for(int i = 0; i < sortedNeighbours.size(); i++){
-                double randomNumber = random.nextDouble();
-                if(randomNumber >= 0.5){
-                    return new NeighborSearchOutcome(sortedNeighbours.get(i), -1, indexes.get(sortedNeighbours.get(i)), -1, -1, false);
-                }
-            }
-            return new NeighborSearchOutcome(sortedNeighbours.getLast(), -1, indexes.get(sortedNeighbours.getLast()), -1, -1, false);
-        }
-    }
-
     private static final class BestImprovementTracker extends ImprovementTracker {
         @Override
         protected boolean accept(SearchState candidate) {
@@ -148,10 +127,11 @@ public enum SearchStrategy {
         }
     }
 
-    private static final class FirstOrStochastikImprovementTracker extends ImprovementTracker {
+    private static final class StochasticImprovementTracker extends ImprovementTracker {
+
         @Override
         protected boolean accept(SearchState candidate) {
-            return !hasImprovement();
+            return false;
         }
 
         @Override
@@ -159,22 +139,26 @@ public enum SearchStrategy {
             return true;
         }
 
+        @Override
+        public boolean shouldStop() {
+            return false;
+        }
+
         public NeighborSearchOutcome getStochasticImprovement(Random random){
+
+            if(sortedNeighbours.isEmpty()){
+                return new NeighborSearchOutcome(null, -1, -1, -1, -1, false);
+            }
+
             sortedNeighbours.sort(Comparator.comparing(SearchState::getBitsPerBase));
 
-            //better improvements are more likely than weaker improvements:
             for(int i = 0; i < sortedNeighbours.size(); i++){
                 double randomNumber = random.nextDouble();
                 if(randomNumber >= 0.5){
-                    return new NeighborSearchOutcome(sortedNeighbours.get(i), -1, indexes.get(sortedNeighbours.get(i)), -1, -1, false);
+                    return new NeighborSearchOutcome(sortedNeighbours.get(i), -1, indexes.get(sortedNeighbours.get(i)), -1, -1, true);
                 }
             }
-            return new NeighborSearchOutcome(sortedNeighbours.getLast(), -1, indexes.get(sortedNeighbours.getLast()), -1, -1, false);
-        }
-
-        @Override
-        public boolean shouldStop() {
-            return hasImprovement();
+            return new NeighborSearchOutcome(sortedNeighbours.getLast(), -1, indexes.get(sortedNeighbours.getLast()), -1, -1, true);
         }
     }
 }

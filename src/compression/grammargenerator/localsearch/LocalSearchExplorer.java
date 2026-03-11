@@ -86,18 +86,18 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
 		SearchState current = sampleParsableSeed(initialRuleCount, maxSeedAttempts);
 		Logging.printSeed(runNumber, current.getGrammar().size(), current.getBitsPerBase());
 
-        Random randomStochasticStrategy = new Random(1234);
+        Random rng = new Random(1234);
 
 		int stepsTaken = 0;
 		int totalNeighborsEvaluated = 0;
 		for (int step = 0; step < maxSteps; step++) {
 			stepsTaken++;
-            randomStochasticStrategy.nextDouble();
-			NeighborSearchOutcome outcome = neighborSearcher.search(current, maxSwapCandidatesPerStep, maxNeighborEvaluationsPerStep, maxCandidatesPerStep, searchStrategy, randomStochasticStrategy);
+            rng.nextDouble();
+			NeighborSearchOutcome outcome = neighborSearcher.search(current, maxSwapCandidatesPerStep, maxNeighborEvaluationsPerStep, maxCandidatesPerStep, searchStrategy, rng);
 			totalNeighborsEvaluated += outcome.getEvaluated();
 			if (!outcome.isImproved()) {
 				Logging.printStepNoImprovement(runNumber, step, current.getGrammar().size(), current.getBitsPerBase(), outcome.getEvaluated());
-                if(Config.defaults().searchStrategy == SearchStrategy.FIRST_IMPROVEMENT || Config.defaults().searchStrategy == SearchStrategy.BEST_IMPROVEMENT) {
+                if(Config.defaults().searchStrategy == SearchStrategy.FIRST_IMPROVEMENT || Config.defaults().searchStrategy == SearchStrategy.BEST_IMPROVEMENT || Config.defaults().searchStrategy == SearchStrategy.STOCHASTIC_IMPROVEMENT) {
                     break;
                 }
 			}

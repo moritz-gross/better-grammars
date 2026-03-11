@@ -23,12 +23,12 @@ public class Config {
 	/**
 	 * Maximum number of neighbor candidates to consider per step; use -1 to explore all.
 	 */
-	@Default int maxCandidatesPerStep = 50; //100
-	@Default int maxSeedAttempts = 10000; //2000
+	@Default int maxCandidatesPerStep = 100;
+	@Default int maxSeedAttempts = 2000;
 	@Default boolean withNonCanonicalRules = false;
 	@Default int objectiveLimit = -1;
 	@Default int numRuns = 3;
-	@Default public SearchStrategy searchStrategy = FIRST_OR_STOCHASTIC_IMPROVEMENT;
+	@Default public SearchStrategy searchStrategy = STOCHASTIC_IMPROVEMENT;
 	@Default String objectiveDatasetName = "small-dataset";
 	@Default String parsableDatasetName = "minimal-parsable";
 	@Default int poolSize = 3;
