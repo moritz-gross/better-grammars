@@ -5,7 +5,6 @@ import compression.grammargenerator.localsearch.dataclasses.RunResult;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static java.time.format.DateTimeFormatter.ofPattern;
@@ -22,8 +21,12 @@ public class ExploringTheWorld {
     int largeIncreasedNTerminals = 0;
     int largeIncreaseTerminals;
     int largeIncreasedRuleCount = 0;
+    int largeIncreaseRuleCount;
     int largeInitialRuleCount;
     int largeInitialNTerminalsCount;
+    /* A large Runs is one execution of LocalSearchExplorer for the variables below*/
+    int numRunsPerLargeRun;
+    int runsMadePerLargeRun;
 
 
     public static void main(String[] args) {
@@ -34,7 +37,7 @@ public class ExploringTheWorld {
 //        }
         ExploringTheWorld exploringTheWorld = ExploringTheWorld.getInstance();
         try {
-            exploringTheWorld.exploreRuleCountXTerminalCount(3,75,20,3,1,1,true);
+            exploringTheWorld.exploreRuleCountXTerminalCount(10,75,15,3,5,5,true);
         } catch (Exception e) {
             System.out.println("Well maybe that did not work");
         }
@@ -53,6 +56,8 @@ public class ExploringTheWorld {
     void exploreRuleCountXTerminalCount(int numRuns,int maxNeighborEvaluationsPerStep, int initialRuleCount, int initialnNonterminals, int increaseTerminals, int increaseRuleCount, boolean runLarge) throws Exception {
 //        if(increaseTerminals - initialnNonterminals < 0) return;
 //        if(increaseRuleCount - initialRuleCount < 0) return;
+        /* A large Runs is one execution of LocalSearchExplorer*/
+        numRunsPerLargeRun = numRuns;
         int increasedNonterminals = 0;
         int increasedRuleCount = 0;
       // String timestamp = java.time.LocalDateTime.now().format(ofPattern("yyyyMMdd_HHmmss"));
@@ -126,6 +131,7 @@ public class ExploringTheWorld {
         largeInitialRuleCount = intialRulecount;
         largeInitialNTerminalsCount = initialNTerminalsCount;
         largeIncreaseTerminals = increaseTerminals;
+        largeIncreaseRuleCount = increaseRuleCount;
         String timestamp = java.time.LocalDateTime.now().format(ofPattern("yyyyMMdd_HHmmss"));
         File file = new File("results/exploringTheLargeWorldResults/"+"local-search_"+timestamp+".csv");
         fileWriter = new FileWriter(file);
@@ -136,25 +142,36 @@ public class ExploringTheWorld {
         CsvProgressWriter.createForExploringTheWorld();
 
     }
-    void largerDataCollectionOfRuleCountXTerminalCountAddData(int runNumber, int step, double bitsPerBase, int grammarSize, int neighborsEvaluated) throws IOException {
-        String largeRunID = runNumber + "_" + largeInitialRuleCount+largeIncreasedRuleCount + "_" + largeInitialNTerminalsCount+largeIncreasedNTerminals;
+    void largerDataCollectionOfRuleCountXTerminalCountAddDataToCSV(int runNumber, int step, double bitsPerBase, int grammarSize, int neighborsEvaluated) throws IOException {
+        if (step == -1){
+            if(numRunsPerLargeRun <= runsMadePerLargeRun) {
+//                if (largeIncreasedNTerminals <= largeIncreaseTerminals) {
+//                    largeIncreasedNTerminals++;
+//                } else {
+//                    largeIncreasedRuleCount++;
+//                    largeIncreasedNTerminals = 0;
+//                }
+                if (largeIncreasedRuleCount <= largeIncreaseRuleCount) {
+                    largeIncreasedRuleCount++;
+                } else {
+                    largeIncreasedNTerminals++;
+                    largeIncreasedRuleCount = 0;
+                }
+            } else runsMadePerLargeRun++;
+        }
+        String largeRunID = runNumber + "_" + (largeInitialRuleCount + largeIncreasedRuleCount) + "_" + (largeInitialNTerminalsCount + largeIncreasedNTerminals);
         bufferedWriter.newLine();
         bufferedWriter.write(
-                            largeRunID
-                        + "," + largeInitialRuleCount+largeIncreasedRuleCount
-                        + "," + largeInitialNTerminalsCount+largeIncreasedNTerminals
+                largeRunID
+                        + "," + (largeInitialRuleCount + largeIncreasedRuleCount)
+                        + "," + (largeInitialNTerminalsCount + largeIncreasedNTerminals)
                         + "," + runNumber
                         + "," + step
                         + "," + bitsPerBase
                         + "," + grammarSize
                         + "," + neighborsEvaluated);
         bufferedWriter.flush();
-        if(largeIncreasedNTerminals <= largeIncreaseTerminals) {
-            largeIncreasedNTerminals++;
-        } else{
-            largeIncreasedRuleCount++;
-            largeIncreasedNTerminals = 0;
-        }
+
     }
 
     /**

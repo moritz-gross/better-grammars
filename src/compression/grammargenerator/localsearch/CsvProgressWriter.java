@@ -73,7 +73,7 @@ public final class CsvProgressWriter implements AutoCloseable {
 				writer.write(String.format(Locale.US, "%d,%d,%.6f,%d,%d%n",
 						runNumber, step, bitsPerBase, grammarSize, neighborsEvaluated));
 				writer.flush();
-                if(Objects.nonNull(exploringTheWorld)) exploringTheWorld.largerDataCollectionOfRuleCountXTerminalCountAddData(runNumber,  step, bitsPerBase, grammarSize, neighborsEvaluated);
+                if(Objects.nonNull(exploringTheWorld)) exploringTheWorld.largerDataCollectionOfRuleCountXTerminalCountAddDataToCSV(runNumber,  step, bitsPerBase, grammarSize, neighborsEvaluated);
 			} catch (IOException e) {
 				// Log error but don't fail the run
 				System.err.println("Failed to write CSV progress: " + e.getMessage());
@@ -81,9 +81,20 @@ public final class CsvProgressWriter implements AutoCloseable {
 		}
 	}
 
+    /**
+     * the if statement is a bad overwrite on the close() Method,
+     * to fix a logical issue with the code.
+     * It shouldn't cause issues, since the file will be given free after the JVM terminates.
+     *
+     * @throws IOException
+     */
 	@Override
 	public void close() throws IOException {
 		synchronized (lock) {
+            if(Objects.nonNull(exploringTheWorld)){
+                writer.flush();
+                return;
+            }
 			writer.close();
 		}
 	}
