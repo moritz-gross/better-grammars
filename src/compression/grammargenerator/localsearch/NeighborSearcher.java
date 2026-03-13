@@ -2,6 +2,7 @@ package compression.grammargenerator.localsearch;
 
 import compression.grammar.SecondaryStructureGrammar;
 import compression.grammar.Terminal;
+import compression.grammargenerator.localsearch.dataclasses.Config;
 import compression.grammargenerator.localsearch.dataclasses.NeighborSearchOutcome;
 import compression.grammargenerator.localsearch.dataclasses.SearchState;
 import compression.grammargenerator.localsearch.dataclasses.SearchStrategy;
@@ -55,9 +56,10 @@ final class NeighborSearcher {
 			double score = scoreEvaluator.score(candidateGrammar);
 			evaluated++;
 			neighborIndex++;
-			if (score < current.getBitsPerBase()) {
+            double currentScore = current.getBitsPerBase();
+			if (score < currentScore) {
 				SearchState candidateState = new SearchState(candidateMask, candidateGrammar, score);
-				tracker.consider(candidateState, neighborIndex);
+				tracker.consider(candidateState, neighborIndex, currentScore);
 				if (tracker.shouldStop()) {
 					return new NeighborSearchOutcome(
 							tracker.best(),
@@ -68,9 +70,25 @@ final class NeighborSearcher {
 							true);
 				}
 			}
+            else{
+                if(tracker.acceptsWorsening()){
+                    SearchState candidateState = new SearchState(candidateMask, candidateGrammar, score);
+                    tracker.consider(candidateState, neighborIndex, currentScore);
+                    if (tracker.shouldStop()) { //shouldStop in this case not needed at the moment, but maybe in the future
+                        return new NeighborSearchOutcome(
+                                tracker.best(),
+                                evaluated,
+                                tracker.bestIndex(),
+                                current.getGrammar().size(),
+                                current.getBitsPerBase(),
+                                true);
+                    }
+                }
+            }
+
 		}
 
-        if(tracker.stochastic()){
+        if(tracker.isStochastic()){
             rng.nextDouble();
             NeighborSearchOutcome nso = tracker.getStochasticImprovement(rng);
             return new NeighborSearchOutcome(
