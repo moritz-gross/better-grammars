@@ -1,7 +1,5 @@
 package compression.grammargenerator.localsearch.dataclasses;
 
-import compression.grammargenerator.localsearch.Logging;
-
 import java.util.*;
 
 /**
@@ -38,6 +36,18 @@ public enum SearchStrategy {
         public ImprovementTracker newTracker() {
             return new StochasticImprovementTracker();
         }
+    },
+
+    /**
+     * All neighboring grammars or as much as allowed by the config, are saved in a list, no matter if they are an improvement or not.
+     * If a grammar is found that is an improvement it will be selected immediately (see FIRST_IMPROVEMENT).
+     * Otherwise (after all neighbors have been considered), the list is sorted with the best grammar at the front. In the list the n-th element (starting with 1) will be
+     * selected with the likeliness 1/2^n
+     */
+    FIRST_OR_STOCHASTIC_IMPROVEMENT {
+        public ImprovementTracker newTracker() {
+            return new FirstOrStochasticImprovementTracker();
+        }
     }
     ;
 
@@ -54,20 +64,22 @@ public enum SearchStrategy {
             indexes = new HashMap<>();
         }
 
-        public final void consider(SearchState candidate, int neighborIndex) {
-            if (accept(candidate)) {
+        public final void consider(SearchState candidate, int neighborIndex, double currentScore) {
+            if (accept(candidate, currentScore)) {
                 best = candidate;
                 bestIndex = neighborIndex;
             }
-            if (stochastic()) {
+            if (isStochastic()) {
                 sortedNeighbours.add(candidate);
                 indexes.put(candidate, neighborIndex);
             }
         }
 
-        protected abstract boolean accept(SearchState candidate);
+        protected abstract boolean accept(SearchState candidate, double currentScore);
 
-        public abstract boolean stochastic();
+        public abstract boolean isStochastic(); //another good name for this would be needList()
+
+        public abstract boolean acceptsWorsening();
 
         public abstract boolean shouldStop();
 
@@ -88,12 +100,16 @@ public enum SearchStrategy {
 
     private static final class FirstImprovementTracker extends ImprovementTracker {
         @Override
-        protected boolean accept(SearchState candidate) {
+        protected boolean accept(SearchState candidate, double currentScore) {
             return !hasImprovement();
         }
 
         @Override
-        public boolean stochastic() {
+        public boolean isStochastic() {
+            return false;
+        }
+
+        public boolean acceptsWorsening() {
             return false;
         }
 
@@ -109,14 +125,19 @@ public enum SearchStrategy {
 
     private static final class BestImprovementTracker extends ImprovementTracker {
         @Override
-        protected boolean accept(SearchState candidate) {
+        protected boolean accept(SearchState candidate, double currentScore) {
             return !hasImprovement() || candidate.getBitsPerBase() < best().getBitsPerBase();
         }
 
         @Override
-        public boolean stochastic() {
+        public boolean isStochastic() {
             return false;
         }
+
+        public boolean acceptsWorsening() {
+            return false;
+        }
+
         public NeighborSearchOutcome getStochasticImprovement(Random random){
             return null;
         }
@@ -130,13 +151,17 @@ public enum SearchStrategy {
     private static final class StochasticImprovementTracker extends ImprovementTracker {
 
         @Override
-        protected boolean accept(SearchState candidate) {
+        protected boolean accept(SearchState candidate, double currentScore) {
             return false;
         }
 
         @Override
-        public boolean stochastic() {
+        public boolean isStochastic() {
             return true;
+        }
+
+        public boolean acceptsWorsening() {
+            return false;
         }
 
         @Override
@@ -159,6 +184,44 @@ public enum SearchStrategy {
                 }
             }
             return new NeighborSearchOutcome(sortedNeighbours.getLast(), -1, indexes.get(sortedNeighbours.getLast()), -1, -1, true);
+        }
+    }
+
+    private static final class FirstOrStochasticImprovementTracker extends ImprovementTracker {
+        @Override
+        protected boolean accept(SearchState candidate, double currentScore) {
+            return candidate.getBitsPerBase() < currentScore;
+        }
+
+        @Override
+        public boolean isStochastic() {
+            return true;
+        }
+
+        public boolean acceptsWorsening() {
+            return true;
+        }
+
+        public NeighborSearchOutcome getStochasticImprovement(Random random){
+
+            if(sortedNeighbours.isEmpty()){
+                return new NeighborSearchOutcome(null, -1, -1, -1, -1, false);
+            }
+
+            sortedNeighbours.sort(Comparator.comparing(SearchState::getBitsPerBase));
+
+            for(int i = 0; i < sortedNeighbours.size(); i++){
+                double randomNumber = random.nextDouble();
+                if(randomNumber >= 0.5){
+                    return new NeighborSearchOutcome(sortedNeighbours.get(i), -1, indexes.get(sortedNeighbours.get(i)), -1, -1, false);
+                }
+            }
+            return new NeighborSearchOutcome(sortedNeighbours.getLast(), -1, indexes.get(sortedNeighbours.getLast()), -1, -1, false);
+        }
+
+        @Override
+        public boolean shouldStop() {
+            return hasImprovement();
         }
     }
 }

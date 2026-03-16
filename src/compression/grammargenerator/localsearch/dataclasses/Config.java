@@ -17,7 +17,7 @@ public class Config {
 	@Default int nNonterminals = 3;
 	@Default int initialRuleCount = 20;
 	@Default long baseSeed = 42;
-	@Default int maxSteps = 25;
+	@Default int maxSteps = 70; //25
 	@Default int maxSwapCandidatesPerStep = 100;
 	@Default int maxNeighborEvaluationsPerStep = 150;
 	/**
@@ -28,7 +28,7 @@ public class Config {
 	@Default boolean withNonCanonicalRules = false;
 	@Default int objectiveLimit = -1;
 	@Default int numRuns = 3;
-	@Default public SearchStrategy searchStrategy = STOCHASTIC_IMPROVEMENT;
+	@Default public SearchStrategy searchStrategy = FIRST_OR_STOCHASTIC_IMPROVEMENT;
 	@Default String objectiveDatasetName = "small-dataset";
 	@Default String parsableDatasetName = "minimal-parsable";
 	@Default int poolSize = 3;
