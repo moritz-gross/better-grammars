@@ -17,7 +17,7 @@ public class Config {
 	@Default int nNonterminals = 3;
 	@Default int initialRuleCount = 20;
 	@Default long baseSeed = 42;
-	@Default int maxSteps = 70; //25
+	@Default int maxSteps = 50;
 	@Default int maxSwapCandidatesPerStep = 100;
 	@Default int maxNeighborEvaluationsPerStep = 150;
 	/**

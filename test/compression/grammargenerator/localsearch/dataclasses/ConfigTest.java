@@ -18,7 +18,7 @@ public class ConfigTest {
 		assertEquals(3, config.nNonterminals());
 		assertEquals(20, config.initialRuleCount());
 		assertEquals(42L, config.baseSeed());
-		assertEquals(25, config.maxSteps());
+		assertEquals(50, config.maxSteps());
 		assertEquals(100, config.maxSwapCandidatesPerStep());
 		assertEquals(150, config.maxNeighborEvaluationsPerStep());
 		assertEquals(100, config.maxCandidatesPerStep());
@@ -26,7 +26,7 @@ public class ConfigTest {
 		assertFalse(config.withNonCanonicalRules());
 		assertEquals(-1, config.objectiveLimit());
 		assertEquals(3, config.numRuns());
-		assertEquals(SearchStrategy.FIRST_IMPROVEMENT, config.searchStrategy());
+		assertEquals(SearchStrategy.FIRST_OR_STOCHASTIC_IMPROVEMENT, config.searchStrategy());
 		assertEquals("small-dataset", config.objectiveDatasetName());
 		assertEquals("minimal-parsable", config.parsableDatasetName());
 		assertEquals(3, config.poolSize());
@@ -41,7 +41,7 @@ public class ConfigTest {
 		Config updated = original.withStrategy(SearchStrategy.BEST_IMPROVEMENT);
 
 		assertNotSame(original, updated);
-		assertEquals(SearchStrategy.FIRST_IMPROVEMENT, original.searchStrategy());
+		assertEquals(SearchStrategy.FIRST_OR_STOCHASTIC_IMPROVEMENT, original.searchStrategy());
 		assertEquals(SearchStrategy.BEST_IMPROVEMENT, updated.searchStrategy());
 	}
 

@@ -18,13 +18,13 @@ public class SearchStrategyTest {
 		SearchState first = new SearchState(new boolean[] { true, false }, null, 2.0);
 		SearchState second = new SearchState(new boolean[] { false, true }, null, 1.0);
 
-		tracker.consider(first, 0);
+		tracker.consider(first, 0, 3.0);
 		assertTrue(tracker.hasImprovement());
 		assertTrue(tracker.shouldStop());
 		assertSame(first, tracker.best());
 		assertEquals(0, tracker.bestIndex());
 
-		tracker.consider(second, 1);
+		tracker.consider(second, 1, 2.0);
 		assertSame(first, tracker.best());
 		assertEquals(0, tracker.bestIndex());
 	}
@@ -39,16 +39,16 @@ public class SearchStrategyTest {
 		SearchState better = new SearchState(new boolean[] { false }, null, 1.5);
 		SearchState worse = new SearchState(new boolean[] { true, true }, null, 1.7);
 
-		tracker.consider(initial, 0);
+		tracker.consider(initial, 0, 3.0);
 		assertFalse(tracker.shouldStop());
 		assertSame(initial, tracker.best());
 		assertEquals(0, tracker.bestIndex());
 
-		tracker.consider(better, 1);
+		tracker.consider(better, 1, 2.0);
 		assertSame(better, tracker.best());
 		assertEquals(1, tracker.bestIndex());
 
-		tracker.consider(worse, 2);
+		tracker.consider(worse, 2, 1.5);
 		assertSame(better, tracker.best());
 		assertEquals(1, tracker.bestIndex());
 		assertFalse(tracker.shouldStop());
