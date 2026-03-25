@@ -14,12 +14,13 @@ import static compression.grammargenerator.localsearch.dataclasses.SearchStrateg
 @Builder(toBuilder = true)
 @Accessors(fluent = true)
 public class Config {
-	@Default int nNonterminals = 3;
+	@Default int nNonterminals = 4;
 	@Default int initialRuleCount = 20;
 	@Default long baseSeed = 42;
 	@Default int maxSteps = 50;
 	@Default int maxSwapCandidatesPerStep = 100;
 	@Default int maxNeighborEvaluationsPerStep = 150;
+    @Default boolean RunWithLargerDataCollection = false;
 	/**
 	 * Maximum number of neighbor candidates to consider per step; use -1 to explore all.
 	 */
