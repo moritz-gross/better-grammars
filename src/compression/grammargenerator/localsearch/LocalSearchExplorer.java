@@ -95,22 +95,49 @@ public class LocalSearchExplorer extends AbstractGrammarExplorer {
             rng.nextDouble();
 			NeighborSearchOutcome outcome = neighborSearcher.search(current, maxSwapCandidatesPerStep, maxNeighborEvaluationsPerStep, maxCandidatesPerStep, searchStrategy, rng);
 			totalNeighborsEvaluated += outcome.getEvaluated();
-			if (!outcome.isImproved()) {
-				Logging.printStepNoImprovement(runNumber, step, current.getGrammar().size(), current.getBitsPerBase(), outcome.getEvaluated());
-                if(Config.defaults().searchStrategy == SearchStrategy.FIRST_IMPROVEMENT || Config.defaults().searchStrategy == SearchStrategy.BEST_IMPROVEMENT || Config.defaults().searchStrategy == SearchStrategy.STOCHASTIC_IMPROVEMENT) {
+
+            if (Config.defaults().searchStrategy == SearchStrategy.FIRST_IMPROVEMENT || Config.defaults().searchStrategy == SearchStrategy.BEST_IMPROVEMENT || Config.defaults().searchStrategy == SearchStrategy.STOCHASTIC_IMPROVEMENT) {
+                if (!outcome.isImproved()) {
+                    Logging.printStepNoImprovement(runNumber, step, current.getGrammar().size(), current.getBitsPerBase(), outcome.getEvaluated());
                     break;
+                } else {
+                    current = outcome.getNext();
+                    Logging.printStepImprovement(
+                            runNumber,
+                            step,
+                            outcome.getPreviousGrammarSize(),
+                            outcome.getPreviousBitsPerBase(),
+                            outcome.getEvaluated(),
+                            outcome.getImprovementNeighborIndex(),
+                            current.getGrammar().size(),
+                            current.getBitsPerBase());
                 }
-			}
-			current = outcome.getNext();
-			Logging.printStepImprovement(
-					runNumber,
-					step,
-					outcome.getPreviousGrammarSize(),
-					outcome.getPreviousBitsPerBase(),
-					outcome.getEvaluated(),
-					outcome.getImprovementNeighborIndex(),
-					current.getGrammar().size(),
-					current.getBitsPerBase());
+
+            } else if (Config.defaults().searchStrategy == SearchStrategy.FIRST_OR_STOCHASTIC_IMPROVEMENT) {
+                if (!outcome.isImproved()) {
+                    current = outcome.getNext();
+                    Logging.printNegativeStepImprovement(
+                            runNumber,
+                            step,
+                            outcome.getPreviousGrammarSize(),
+                            outcome.getPreviousBitsPerBase(),
+                            outcome.getEvaluated(),
+                            outcome.getImprovementNeighborIndex(),
+                            current.getGrammar().size(),
+                            current.getBitsPerBase());
+                } else {
+                    current = outcome.getNext();
+                    Logging.printStepImprovement(
+                            runNumber,
+                            step,
+                            outcome.getPreviousGrammarSize(),
+                            outcome.getPreviousBitsPerBase(),
+                            outcome.getEvaluated(),
+                            outcome.getImprovementNeighborIndex(),
+                            current.getGrammar().size(),
+                            current.getBitsPerBase());
+                }
+            }
 		}
 
 		RunStats stats = new RunStats(
