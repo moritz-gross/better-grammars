@@ -144,7 +144,7 @@ public class ExploringTheWorld {
     }
     void largerDataCollectionOfRuleCountXTerminalCountAddDataToCSV(int runNumber, int step, double bitsPerBase, int grammarSize, int neighborsEvaluated) throws IOException {
         if (step == -1){
-            if(numRunsPerLargeRun <= runsMadePerLargeRun) {
+            if(runsMadePerLargeRun <= numRunsPerLargeRun) {
 //                if (largeIncreasedNTerminals <= largeIncreaseTerminals) {
 //                    largeIncreasedNTerminals++;
 //                } else {
