@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static compression.grammargenerator.localsearch.dataclasses.SearchStrategy.FIRST_IMPROVEMENT;
 import static java.time.format.DateTimeFormatter.ofPattern;
 
 public class ExploringTheWorld {
@@ -78,6 +79,7 @@ public class ExploringTheWorld {
                             .initialRuleCount(initialRuleCount+j)
                             .nNonterminals(initialnNonterminals +i)
                             .RunWithLargerDataCollection(true)
+                            .searchStrategy(FIRST_IMPROVEMENT)
                             .build());
                     collectedResults.add(oneResult);
                 }
@@ -93,6 +95,7 @@ public class ExploringTheWorld {
                             .maxNeighborEvaluationsPerStep(maxNeighborEvaluationsPerStep)
                             .initialRuleCount(initialRuleCount+j)
                             .nNonterminals(initialnNonterminals +i)
+                            .searchStrategy(FIRST_IMPROVEMENT)
                             .build());
                     collectedResults.add(oneResult);
                 }
@@ -144,13 +147,8 @@ public class ExploringTheWorld {
     }
     void largerDataCollectionOfRuleCountXTerminalCountAddDataToCSV(int runNumber, int step, double bitsPerBase, int grammarSize, int neighborsEvaluated) throws IOException {
         if (step == -1){
-            if(runsMadePerLargeRun <= numRunsPerLargeRun) {
-//                if (largeIncreasedNTerminals <= largeIncreaseTerminals) {
-//                    largeIncreasedNTerminals++;
-//                } else {
-//                    largeIncreasedRuleCount++;
-//                    largeIncreasedNTerminals = 0;
-//                }
+            if(runsMadePerLargeRun >= numRunsPerLargeRun) {
+                runsMadePerLargeRun = 0;
                 if (largeIncreasedRuleCount <= largeIncreaseRuleCount) {
                     largeIncreasedRuleCount++;
                 } else {
@@ -207,13 +205,13 @@ public class ExploringTheWorld {
                         + "," + RunResult.getStats().getBestSize()
                         + "," + RunResult.getStats().getBestBitsPerBase());
                 bufferedWriter.flush();
-                if(increasedNTerminals <= increaseTerminals) {
-                    increasedNTerminals++;
-                } else{
-                    increasedRuleCount++;
-                    increasedNTerminals = 0;
-                }
 
+            }
+            if(increasedRuleCount <= increaseTerminals ){
+                increasedRuleCount++;
+            } else{
+                increasedNTerminals++;
+                increasedRuleCount = 0;
             }
 
         }
