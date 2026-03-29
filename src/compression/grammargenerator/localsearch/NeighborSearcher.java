@@ -199,6 +199,9 @@ final class NeighborSearcher {
                 swapMoves.add(move);
             }
         }
+        addMoves = shuffleMoves(addMoves);
+        removeMoves = shuffleMoves(removeMoves);
+        swapMoves = shuffleMoves(swapMoves);
 
         int addIndex = 0;
         int removeIndex = 0;
@@ -235,6 +238,16 @@ final class NeighborSearcher {
         while(removeMoves.size() > removeIndex){
             shuffledMoves.add(removeMoves.get(removeIndex));
             removeIndex++;
+        }
+        return shuffledMoves;
+    }
+    private List<Move> shuffleMoves(List<Move> moves){
+        int initialMovesSize = moves.size();
+        List <Move> shuffledMoves = new ArrayList<>();
+        for(int i = 0; i < initialMovesSize; i++){
+            int index =(int) (random.nextDouble(1) * moves.size());
+            shuffledMoves.add(moves.get(index));
+            moves.remove(index);
         }
         return shuffledMoves;
     }

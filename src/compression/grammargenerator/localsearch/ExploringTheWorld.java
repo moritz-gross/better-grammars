@@ -102,7 +102,7 @@ public class ExploringTheWorld {
     }
 
 
-    
+
     void largerDataCollectionOfRuleCountXTerminalCountToCSV(int intialRulecount, int initialNTerminalsCount,
                                    int increaseTerminals, int increaseRuleCount) throws IOException {
         largeInitialRuleCount = intialRulecount;
