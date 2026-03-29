@@ -31,11 +31,7 @@ public class ExploringTheWorld {
 
 
     public static void main(String[] args) {
-//        try {
-//            LocalSearchExplorer.runWithConfig(Config.builder().build());
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
+
         ExploringTheWorld exploringTheWorld = ExploringTheWorld.getInstance();
         try {
             exploringTheWorld.exploreRuleCountXTerminalCount(10,75,15,3,5,5,true);
@@ -55,13 +51,12 @@ public class ExploringTheWorld {
     }
 
     void exploreRuleCountXTerminalCount(int numRuns,int maxNeighborEvaluationsPerStep, int initialRuleCount, int initialnNonterminals, int increaseTerminals, int increaseRuleCount, boolean runLarge) throws Exception {
-//        if(increaseTerminals - initialnNonterminals < 0) return;
-//        if(increaseRuleCount - initialRuleCount < 0) return;
+
         /* A large Runs is one execution of LocalSearchExplorer*/
         numRunsPerLargeRun = numRuns;
         int increasedNonterminals = 0;
         int increasedRuleCount = 0;
-      // String timestamp = java.time.LocalDateTime.now().format(ofPattern("yyyyMMdd_HHmmss"));
+
         List<List<RunResult>> collectedResults = new ArrayList<>();
         if(runLarge){
 
@@ -105,30 +100,9 @@ public class ExploringTheWorld {
         }
 
     }
-    void exploreRCXTCToCSV(List<List<RunResult>> collectedResults, int numRuns, int maxNeighborEvaluationsPerStep,
-                           int initialRuleCount, int nNonterminals, int totalIncreaseTerminals, int totalIncreaseRuleCount,String Timestamp) throws Exception {
 
-//        fileWriter = new FileWriter()
-//        bufferedWriter = new BufferedWriter(fileWriter);
 
-    }
-
-    void simpleRunResultToCSV(List<List<RunResult>> runResult) throws IOException {
-        String timestamp = java.time.LocalDateTime.now().format(ofPattern("yyyyMMdd_HHmmss"));
-        File file = new File("results/exploringTheWorldResults/"+"local-search_"+timestamp+".csv");
-        fileWriter = new FileWriter(file);
-        bufferedWriter = new BufferedWriter(fileWriter);
-        bufferedWriter.write("runNumber,seed,stepsTaken,totalNeighborsEvaluated,bestSize,bestBitsPerBase");
-        for(List<RunResult> listRunResult:runResult){
-            for(RunResult RunResult:listRunResult){
-                bufferedWriter.newLine();
-                bufferedWriter.write(RunResult.getStats().getRunNumber() + "," + RunResult.getStats().getSeed()
-                        + "," + RunResult.getStats().getStepsTaken() + "," + RunResult.getStats().getTotalNeighborsEvaluated() +
-                        "," + RunResult.getStats().getBestSize() + "," + RunResult.getStats().getBestBitsPerBase());
-
-            }
-        }
-    }
+    
     void largerDataCollectionOfRuleCountXTerminalCountToCSV(int intialRulecount, int initialNTerminalsCount,
                                    int increaseTerminals, int increaseRuleCount) throws IOException {
         largeInitialRuleCount = intialRulecount;
