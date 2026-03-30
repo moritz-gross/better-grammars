@@ -34,7 +34,7 @@ public class ExploringTheWorld {
 
         ExploringTheWorld exploringTheWorld = ExploringTheWorld.getInstance();
         try {
-            exploringTheWorld.exploreRuleCountXTerminalCount(10,75,15,3,5,5,true);
+            exploringTheWorld.exploreRuleCountXTerminalCount(10,75,15,3,5,4,true);
         } catch (Exception e) {
             System.out.println("Well maybe that did not work");
         }
@@ -66,8 +66,8 @@ public class ExploringTheWorld {
                 System.out.println("larger data collection failed at initialization");
                 throw e;
             }
-            for(int i=increasedNonterminals;i<=increaseTerminals;i++){
-                for(int j=increasedRuleCount;j<=increaseRuleCount;j++){
+            for(int i=increasedNonterminals;i<increaseTerminals;i++){
+                for(int j=increasedRuleCount;j<increaseRuleCount;j++){
                     List<RunResult> oneResult = LocalSearchExplorer.runWithConfig(Config.builder()
                             .numRuns(numRuns)
                             .maxNeighborEvaluationsPerStep(maxNeighborEvaluationsPerStep)
@@ -83,8 +83,8 @@ public class ExploringTheWorld {
 
 
         } else{
-            for(int i=increasedNonterminals;i<=increaseTerminals;i++){
-                for(int j=increasedRuleCount;j<=increaseRuleCount;j++){
+            for(int i=increasedNonterminals;i<increaseTerminals;i++){
+                for(int j=increasedRuleCount;j<increaseRuleCount;j++){
                     List<RunResult> oneResult = LocalSearchExplorer.runWithConfig(Config.builder()
                             .numRuns(numRuns)
                             .maxNeighborEvaluationsPerStep(maxNeighborEvaluationsPerStep)
@@ -123,7 +123,7 @@ public class ExploringTheWorld {
         if (step == -1){
             if(runsMadePerLargeRun >= numRunsPerLargeRun) {
                 runsMadePerLargeRun = 0;
-                if (largeIncreasedRuleCount <= largeIncreaseRuleCount) {
+                if (largeIncreasedRuleCount < largeIncreaseRuleCount) {
                     largeIncreasedRuleCount++;
                 } else {
                     largeIncreasedNTerminals++;
@@ -173,7 +173,6 @@ public class ExploringTheWorld {
                         + "," + intialRulecount+increasedRuleCount
                         + "," + initialNTerminalsCount+increasedNTerminals
                         + "," + RunResult.getStats().getSeed()
-                        + "," + RunResult.getStats().getSeed()
                         + "," + RunResult.getStats().getStepsTaken()
                         + "," + RunResult.getStats().getTotalNeighborsEvaluated()
                         + "," + RunResult.getStats().getBestSize()
@@ -181,7 +180,7 @@ public class ExploringTheWorld {
                 bufferedWriter.flush();
 
             }
-            if(increasedRuleCount <= increaseTerminals ){
+            if(increasedRuleCount <= increaseRuleCount ){
                 increasedRuleCount++;
             } else{
                 increasedNTerminals++;
