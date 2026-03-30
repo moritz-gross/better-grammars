@@ -2,7 +2,6 @@ package compression.grammargenerator.localsearch;
 
 import compression.grammar.SecondaryStructureGrammar;
 import compression.grammar.Terminal;
-import compression.grammargenerator.localsearch.dataclasses.Config;
 import compression.grammargenerator.localsearch.dataclasses.NeighborSearchOutcome;
 import compression.grammargenerator.localsearch.dataclasses.SearchState;
 import compression.grammargenerator.localsearch.dataclasses.SearchStrategy;
@@ -12,14 +11,31 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
 /**
- * Encapsulates neighbor generation and selection for local search.
+ * Generates and evaluates one-step neighbors for a {@link SearchState}.
+ *
+ * <p>A step starts from the current rule mask and builds candidate moves by removing one present
+ * rule, adding one absent rule, and sampling swap moves between present and absent rules. The
+ * resulting move list is then reordered with a biased shuffle before exploration.
+ *
+ * <p>Each candidate is processed in this order:
+ *
+ * <ol>
+ *   <li>apply the move to the rule mask</li>
+ *   <li>rebuild the grammar and reject invalid masks</li>
+ *   <li>reject grammars that fail the parsable dataset</li>
+ *   <li>reject grammars that fail the objective dataset</li>
+ *   <li>score the remaining grammar and pass it to the configured {@link SearchStrategy}</li>
+ * </ol>
+ *
+ * <p>{@code maxCandidatesPerStep} limits how many moves are considered from the reordered move
+ * list. {@code maxNeighborEvaluationsPerStep} separately limits how many valid candidates are
+ * actually scored, so the two counters can diverge.
  */
 @RequiredArgsConstructor
 final class NeighborSearcher {
@@ -29,12 +45,16 @@ final class NeighborSearcher {
 	private final ScoreEvaluator scoreEvaluator;
 	private final Random random;
 
+	/**
+	 * Explores the neighborhood around {@code current} according to the supplied limits and
+	 * strategy, returning the chosen next state for this step if one exists.
+	 */
 	NeighborSearchOutcome search(final SearchState current,
 	                             final int maxSwapCandidates,
 	                             final int maxNeighborEvaluations,
 	                             final int maxCandidatesPerStep,
 	                             final SearchStrategy strategy,
-                                 final Random rng) {
+	                             final Random rng) {
 		List<Move> moves = enumerateMoves(current.getRuleMask(), maxSwapCandidates);
 		//Collections.shuffle(moves, random);
         moves = rebalancedShuffle(moves);
