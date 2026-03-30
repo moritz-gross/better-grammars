@@ -11,7 +11,12 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Encodes and decodes rule masks to and from grammars.
+ * codec between a {@link SecondaryStructureGrammar} and a boolean rule mask.
+ *
+ * <p>The mask is a {@code boolean[]} of length equal to the global rule universe
+ * ({@code allPossibleRules}). Bit {@code i} is {@code true} iff {@code allPossibleRules[i]} is
+ * present in the grammar. This representation is used throughout local search so that neighbor
+ * moves can be expressed as single bit flips.
  */
 final class RuleMaskCodec {
 	private final Rule[] allPossibleRules;
@@ -27,6 +32,10 @@ final class RuleMaskCodec {
 		}
 	}
 
+	/**
+	 * Encodes {@code grammar} as a boolean mask over the global rule universe.
+	 * Rules not in the universe are silently ignored.
+	 */
 	boolean[] toMask(final SecondaryStructureGrammar grammar) {
 		boolean[] mask = new boolean[allPossibleRules.length];
 		for (Rule rule : grammar.getAllRules()) {
