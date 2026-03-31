@@ -50,7 +50,7 @@ public final class Logging {
 		log.info("{} step {}: size={} score={} | explored {} neighbors, no improvement",
 				runLabel(runNumber), step, size, formatScore(score), explored);
 		if (csvWriter != null) {
-			csvWriter.writeProgress(runNumber, step, score, size, explored);
+			//csvWriter.writeProgress(runNumber, step, score, size, explored);
 		}
 	}
 
@@ -75,6 +75,28 @@ public final class Logging {
 			csvWriter.writeProgress(runNumber, step, newScore, newSize, explored);
 		}
 	}
+
+    public static void printNegativeStepImprovement(int runNumber,
+                                            int step,
+                                            int previousSize,
+                                            double previousScore,
+                                            int explored,
+                                            int improvementIndex,
+                                            int newSize,
+                                            double newScore) {
+        log.info("{} step {}: size={} score={} | explored {} neighbors (no better neighbor, choosing #{} instead) -> size={} score={}",
+                runLabel(runNumber),
+                step,
+                previousSize,
+                formatScore(previousScore),
+                explored,
+                improvementIndex,
+                newSize,
+                formatScore(newScore));
+        if (csvWriter != null) {
+            csvWriter.writeProgress(runNumber, step, newScore, newSize, explored);
+        }
+    }
 
 	public static void printRunCompleted(RunStats stats) {
 		log.info("{} completed: size={} bits/base={} steps={} neighbors={}",

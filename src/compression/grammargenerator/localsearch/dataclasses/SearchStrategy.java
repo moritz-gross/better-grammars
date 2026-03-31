@@ -56,7 +56,7 @@ public enum SearchStrategy {
     public abstract static class ImprovementTracker {
         private SearchState best;
         private int bestIndex = -1;
-        protected final List<SearchState> sortedNeighbours;
+        public final List<SearchState> sortedNeighbours;
         protected final HashMap<SearchState, Integer> indexes;
 
         public ImprovementTracker(){
