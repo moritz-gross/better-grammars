@@ -49,10 +49,10 @@ public class Config {
 	@Default int objectiveLimit = -1;
 
 	/** Number of independent local-search runs to execute. */
-	@Default int numRuns = 3;
+	@Default int numRuns = 100;
 
 	/** Neighborhood policy used to choose the next search state. */
-	@Default public SearchStrategy searchStrategy = FIRST_OR_STOCHASTIC_IMPROVEMENT;
+	@Default public SearchStrategy searchStrategy = BEST_IMPROVEMENT;
 
 	/** Dataset name used for scoring and objective-side parsability checks. */
 	@Default String objectiveDatasetName = "small-dataset";
