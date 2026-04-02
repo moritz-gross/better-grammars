@@ -10,6 +10,7 @@ import static compression.grammargenerator.localsearch.dataclasses.SearchStrateg
 
 public class LongRunForLocalSearch {
     /**
+     * more things can be adjusted in dataclasses/Config
      * This classes only purpose is to give an additional option for starting a run without directly changing the config class
      * Depending on the capacity of the device this is executed a run can roughly take 2 and a half minutes for STOCHASTIC_IMPROVEMENT
      * and 8x longer (20m minutes?) for FIRST_OR_STOCHASTIC_IMPROVEMENT. (this is a rough guess since we did not write down times for single run)
